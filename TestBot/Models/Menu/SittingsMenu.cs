@@ -3,57 +3,70 @@
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
 using System.Collections.Generic;
+using System;
+using Telegram.Bot.Args;
 
 namespace TestBot.Models.Menu
 {
     class SittingsMenu
     {
-        //public static ReplyKeyboardMarkup replyKeyboard { get { return replyKeyboard; } set { value = SetKeyboard(); } }// = new ReplyKeyboardMarkup();
 
-        public static bool Choice { get; set; } = false;
+        private static TelegramBotClient Bot=Program.bot;
 
-        public static ReplyKeyboardMarkup SetKeyboard()
+        public static string Greeting { get; } = "Ты в настройках";
+
+        public static ReplyKeyboardMarkup ReplyKeyboard { get; } = new ReplyKeyboardMarkup(new[] {
+
+                new []{
+                new KeyboardButton("Очистить истрию с ботом")
+                },
+                new []{
+                new KeyboardButton("Назад")
+                }
+
+        }, true);
+
+        public static void Execute()
         {
-            ReplyKeyboardMarkup replyKeyboard;
-            if (Choice == false) replyKeyboard = new ReplyKeyboardMarkup(new[] {
-                new []{
-                new KeyboardButton("Геолокация в виде Гугл карт")
-                },
-                new []{
-                new KeyboardButton("Очистить истрию с ботом")
-                },
-                new []{
-                new KeyboardButton("Назад")
-                },
-                new []{
-                new KeyboardButton("Гео"){RequestLocation=true }
-                }
-
-            });
-            else replyKeyboard = new ReplyKeyboardMarkup(new[] {
-                new []{
-                new KeyboardButton("Геолокация в виде Яндекс карт")
-                },
-                new []{
-                new KeyboardButton("Очистить истрию с ботом")
-                },
-                new []{
-                new KeyboardButton("Назад")
-                }
-            });
-            replyKeyboard.ResizeKeyboard = true;
-            return replyKeyboard;
+            Bot.OnMessage += BotOnMessageRecived;
 
         }
-        
-        public static async void Clear(long chat_id,Telegram.Bot.Types.Message msg_id, TelegramBotClient tg_bot_client)
+
+        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
         {
-            for (int i = msg_id.MessageId; i >=0; i--)
+            var message = e.Message;
+            switch (message.Text)
             {
-                try { await tg_bot_client.DeleteMessageAsync(chat_id, i); }
-                catch { System.Console.WriteLine($"отсутсвует сообщение с номером {0}",i); }
+                case "Очистить истрию с ботом":
+                    Clear(Program.MessagesFromUser,Program.MessagesFromBot);
+                    break;
+               /* case "Назад":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
+                    break;
+                    */
+                default:
+                    break;
+
             }
-           
+        }
+
+        private static async void Clear(List<Telegram.Bot.Types.Message> MsgFromUser,List<Telegram.Bot.Types.Message> MsgFromBot)
+        {
+            foreach (var item in MsgFromBot)
+            {
+                try { await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId); }
+                catch{ }
+            }
+            Program.MessagesFromBot.Clear();
+
+            foreach (var item in MsgFromUser)
+            {
+                try { await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId); }
+                catch { }
+
+            }
+            Program.MessagesFromUser.Clear();
+
         }
         
 

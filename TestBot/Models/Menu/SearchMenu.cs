@@ -9,14 +9,13 @@ namespace TestBot.Models.Menu
 {
     class SearchMenu
     {
-        private static TelegramBotClient Bot;
+        private static TelegramBotClient Bot = Program.bot;
 
         public static ReplyKeyboardMarkup ReplyKeyboard { get; } = new ReplyKeyboardMarkup(new[] { new KeyboardButton("Назад") }, true);
 
         public static string Menu { get; } = "Введите название бара";
-        public static void Execute(TelegramBotClient bot)
+        public static void Execute()
         {
-            Bot = bot;
             Bot.OnMessage += BotOnMessageRecived;
 
         }
@@ -28,9 +27,7 @@ namespace TestBot.Models.Menu
 
             switch (message.Text)
             {
-                case "Назад":
-                    await Bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
-                    break;
+
                 default:
                     Console.WriteLine("Запрос к бд на поиск по названию");
                     await Bot.SendTextMessageAsync(message.Chat.Id, "тут бы появился бар по названию. Или же бары");

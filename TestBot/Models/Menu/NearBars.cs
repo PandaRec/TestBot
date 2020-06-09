@@ -7,7 +7,7 @@ namespace TestBot.Models.Menu
 {
     class NearBars
     {
-        private static TelegramBotClient Bot;
+        private static TelegramBotClient Bot=Program.bot;
         public static string menu { get; } = "Вы в ближлижайших барах";
         public static string Greeting { get; } = "Выберите на сколько вам не лень идти";
 
@@ -45,9 +45,8 @@ namespace TestBot.Models.Menu
 
         }, true);
 
-        public static void Execute(TelegramBotClient bot)
+        public static void Execute()
         {
-            Bot = bot;
             Bot.OnMessage += BotOnMessageRecived;
         }
 
@@ -71,10 +70,11 @@ namespace TestBot.Models.Menu
             switch (message.Text)
             {
                 
-                case "Назад":
+                /*case "Назад":
                     //в главное меню
                     await Bot.SendTextMessageAsync(message.Chat.Id,StartMenu.menu,replyMarkup:StartMenu.ReplyKeyboard);
                     break;
+                    */
                 case "100m":
                     //тут вывод того, что удалось найти в FindNears
                     break;
