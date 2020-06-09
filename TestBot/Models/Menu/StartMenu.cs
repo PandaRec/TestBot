@@ -29,7 +29,7 @@ namespace TestBot.Models.Menu
 
         
 
-        public static string Greeting { get; } = @"Зарова!
+        public static string Greeting { get; } = @"Здарова!
 Рады видеть тебя тут
 Если что то будет не понятно как работает, то тыкай на этот значок:"+ "\n\U00002049"+
 "\n ну или напиши /help";

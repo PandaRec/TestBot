@@ -16,16 +16,16 @@ namespace TestBot
     {
         private static TelegramBotClient bot;
         private static Telegram.Bot.Types.Message answ = null;
-        private static List<Telegram.Bot.Types.Message> list = new List<Telegram.Bot.Types.Message>();
+        private static List<Telegram.Bot.Types.Message> MessagesFromBot = new List<Telegram.Bot.Types.Message>();
+        private static List<Telegram.Bot.Types.Message> MessagesFromUser = new List<Telegram.Bot.Types.Message>();
         private static Telegram.Bot.Types.Location UserLocation;
 
         static void Main(string[] args)
         {
            
 
-            WebProxy proxyObject = new WebProxy("103.127.189.13:808/", true);
+            WebProxy proxyObject = new WebProxy("38.91.100.171:3128/", true);
 
-            //var tb = new Telegram.Bot.TelegramBotClient(key, wp);
 
             bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI",proxyObject);
             bot.OnMessage += BotOnMessageRecived;
@@ -39,7 +39,6 @@ namespace TestBot
             Console.WriteLine("lol");
             var me = bot.GetMeAsync().Result;
             Console.WriteLine(me.FirstName);
-            Console.WriteLine("1");
             bot.StartReceiving();
             Console.ReadLine();
             bot.StopReceiving();
@@ -58,31 +57,37 @@ namespace TestBot
         {
             
             var message = e.Message;
-            Console.WriteLine("k");
             Console.WriteLine(message.Type);
+            /*
             if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location)
             {
-                if (message.Location == null) return;
+                if (message.Location == null)
+                {
+                    await bot.SendTextMessageAsync(message.Chat.Id,"Может ты забыл включить геолокацию?");
+                    return;
+                }
                 UserLocation = message.Location;
                 BotRecivedLocation(message);
                 await bot.SendLocationAsync(message.Chat.Id, message.Location.Latitude, message.Location.Longitude);
                 await bot.SendVenueAsync(message.Chat.Id,message.Location.Latitude,message.Location.Longitude,"твоя локация","адресс");
             }
+            */
             //Console.WriteLine(answ.Location);
             //Console.WriteLine(message.Text);
             switch (message.Text)
             {
                 case "/start":
                     answ=await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.Greeting, replyMarkup: StartMenu.ReplyKeyboard);
-                    list.Add(answ);
+                    MessagesFromBot.Add(answ);
                     break;
                 case "/help":
                     answ=await bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info);
-                    list.Add(answ);
+                    MessagesFromBot.Add(answ);
                     break;
                 case "\U0001F43E":
                     //near bars
-                    answ=await bot.SendTextMessageAsync(message.Chat.Id,NearBars.Greeting,replyMarkup: NearBars.ReplyKeyboard);
+                    NearBars.Execute(bot);
+                    answ=await bot.SendTextMessageAsync(message.Chat.Id,NearBars.AskLocation,replyMarkup: NearBars.ReplyKeyboardGeo);
                     Console.WriteLine("рядом");
                    
                     
@@ -99,13 +104,14 @@ namespace TestBot
                     //info about application and other secondary things
                     //await bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info);
                     answ=await bot.SendTextMessageAsync(message.Chat.Id,InfoMenu.Info,replyMarkup: InfoMenu.ReplyKeyboard);
-                    list.Add(answ);
+                    MessagesFromBot.Add(answ);
                     Console.WriteLine("инфо");
                     break;
 
                 case "\U0001F50D":
                     //search
-                    SearchMenu.Find(bot);
+                    await bot.SendTextMessageAsync(message.Chat.Id, SearchMenu.Menu, replyMarkup: SearchMenu.ReplyKeyboard);
+                    SearchMenu.Execute(bot);
                     Console.WriteLine("поиск");
                     break;
 
@@ -117,7 +123,7 @@ namespace TestBot
                 case "\U00002699":
                     //sittings
                     answ=await bot.SendTextMessageAsync(message.From.Id, "Вы вошли в настройки",replyMarkup: SittingsMenu.SetKeyboard());
-                    list.Add(answ);
+                    MessagesFromBot.Add(answ);
                     Console.WriteLine("настройки");
                     break;
                         case "Геолокация в виде Гугл карт":
@@ -131,11 +137,11 @@ namespace TestBot
                                 await bot.DeleteMessageAsync(message.From.Id, answ.MessageId - 1);
 
                     break;
-                        case "Назад":
-                                answ=await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
-                                list.Add(answ);
+                        //case "Назад":
+                          //      answ=await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
+                    //MessagesFromBot.Add(answ);
 
-                    break;
+                    //break;
                 case "Очистить истрию с ботом":
                     Console.WriteLine("очистить истрию");
                     
@@ -143,29 +149,10 @@ namespace TestBot
 
                     break;
 
-                case "100m":
-                    //Console.WriteLine(message.Location.Latitude + " " + message.Location.Longitude);
-                    Console.WriteLine("100");
-                    Console.WriteLine();
-                    break;
-                case "500m":
-                    break;
-                case "1km":
-                    break;
-                case "2km":
-                    break;
-                case "3km":
-                    break;
-                case "5km":
-                    break;
-                case "8km":
-                    break;
-                case "Гео":
-                    Console.WriteLine("гео");
-                    break;
+               
 
                 default:
-                    await bot.SendTextMessageAsync(message.From.Id,"Это что то незнакомое...");
+                    //await bot.SendTextMessageAsync(message.From.Id,"Это что то незнакомое...");
 
                     break;
 
