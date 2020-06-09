@@ -32,20 +32,7 @@ namespace TestBot
             bot.OnCallbackQuery += BotOnCallbackQueryRecived;
 
             
-            YandexGeocoder geocoder = new YandexGeocoder();
-            geocoder.Apikey = "5c22c518-ebcf-4750-8524-872e96677344";
-             HttpClient client = new HttpClient();
-
-            //string url = "https://api-maps.yandex.ru/2.1?apikey=5c22c518-ebcf-4750-8524-872e96677344&lang=ru_RU";
-            //string url2 = "http://geocode-maps.yandex.ru/1.x/?geocode=" + "Алматы, ул.Айтиева, 42" + "&results=1";
-            string url = "https://geocode-maps.yandex.ru/1.x/?format=json&apikey=5c22c518-ebcf-4750-8524-872e96677344&geocode=Москва, улица Новый Арбат, дом 24";
-            string stuff = client.GetStringAsync(url).GetAwaiter().GetResult();
-            //string l = JsonConvert.DeserializeObject(stuff,"{'response':{'GeoObjectCollection':{'featureMember':{'GeoObject','Point'}}}}");
-            var rootobject = JsonConvert.DeserializeObject<Rootobject>(stuff);
-            Console.WriteLine("k");
-            Console.WriteLine(rootobject.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos);
             
-            //37.587614 55.753083
            
 
 
