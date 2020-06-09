@@ -18,9 +18,9 @@ namespace TestBot.Models.Menu
         private static void BotOnMessageRecived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
-            YandexAPI.Maps.GeoCode geoCode = new YandexAPI.Maps.GeoCode();
-            string result = geoCode.SearchObject(message.Text); // 76.904529 43.254999
-            Console.WriteLine(result);
+            //YandexAPI.Maps.GeoCode geoCode = new YandexAPI.Maps.GeoCode();
+            //string result = geoCode.SearchObject(message.Text); // 76.904529 43.254999
+            //Console.WriteLine(result);
             //Алматы, ул.Айтиева, 42
         }
     }
