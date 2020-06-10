@@ -6,5 +6,6 @@ namespace TestBot.Models
 {
     class ModelOfBar
     {
+                
     }
 }

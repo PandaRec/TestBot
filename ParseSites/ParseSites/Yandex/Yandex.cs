@@ -28,7 +28,7 @@ namespace ParseSites.Yandex
             {
                 pos.Add(rootobject.response.GeoObjectCollection.featureMember[i].GeoObject.Point.pos);
             }
-
+            
             return pos;
         }
     }

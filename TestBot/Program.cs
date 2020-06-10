@@ -20,16 +20,18 @@ namespace TestBot
         public static List<Telegram.Bot.Types.Message> MessagesFromUser { get; private set; } = new List<Telegram.Bot.Types.Message>();
         private static Telegram.Bot.Types.Location UserLocation;
 
+
+
         static void Main(string[] args)
         {
            
 
-            WebProxy proxyObject = new WebProxy("151.80.199.89:3128/", true);
+            WebProxy proxyObject = new WebProxy("176.53.40.222:3128/", true);
 
 
             bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI",proxyObject);
             bot.OnMessage += BotOnMessageRecived;
-            bot.OnCallbackQuery += BotOnCallbackQueryRecived;
+           // bot.OnCallbackQuery += BotOnCallbackQueryRecived;
 
             
             
@@ -56,7 +58,8 @@ namespace TestBot
         private static async void BotOnMessageRecived(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
             
-            var message = e.Message;            
+            var message = e.Message;
+            Console.WriteLine(message.Text);
             switch (message.Text)
             {
                 case "/start":
@@ -67,12 +70,12 @@ namespace TestBot
                     answ=await bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info);
                     MessagesFromBot.Add(answ);
                     break;
-
                 case "Назад":
                     //в главное меню
                     await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
                     break;
                 default:
+                    StartMenu.Execute();
                     //await bot.SendTextMessageAsync(message.From.Id,"Это что то незнакомое...");
                     break;
 
@@ -84,10 +87,6 @@ namespace TestBot
 
         }
 
-        private static void BotRecivedLocation(Telegram.Bot.Types.Message msg)
-        {
-            Console.WriteLine(msg.Location.Latitude+" "+msg.Location.Longitude);
-            
-        }
+       
     }
 }

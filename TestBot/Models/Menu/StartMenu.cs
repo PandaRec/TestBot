@@ -41,19 +41,21 @@ namespace TestBot.Models.Menu
 
         public static void Execute()
         {
-            Bot.OnMessage += BotOnMessageRecived;
+             Bot.OnMessage += BotOnMessageRecived;
 
         }
 
         private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
+            Console.WriteLine(message.Type);
             switch (message.Text)
             {
+               
                 case "\U0001F43E":
                     //near bars
-                    NearBars.Execute();
                     await Bot.SendTextMessageAsync(message.Chat.Id, NearBars.AskLocation, replyMarkup: NearBars.ReplyKeyboardGeo);
+                    NearBars.Execute();
                     Console.WriteLine("рядом");
                     break;
 
@@ -65,14 +67,15 @@ namespace TestBot.Models.Menu
                 case "\U00002049":
                     //info about application and other secondary things
                     await Bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info, replyMarkup: InfoMenu.ReplyKeyboard);
+                    InfoMenu.Execute();
                     //Program.MessagesFromBot.Add(answ);
                     Console.WriteLine("инфо");
                     break;
 
                 case "\U0001F50D":
                     //search
-                    SearchMenu.Execute();
                     await Bot.SendTextMessageAsync(message.Chat.Id, SearchMenu.Menu, replyMarkup: SearchMenu.ReplyKeyboard);
+                    SearchMenu.Execute();
                     Console.WriteLine("поиск");
                     break;
 
@@ -83,8 +86,8 @@ namespace TestBot.Models.Menu
 
                 case "\U00002699":
                     //sittings
-                    SittingsMenu.Execute();
                     await Bot.SendTextMessageAsync(message.From.Id, SittingsMenu.Greeting, replyMarkup: SittingsMenu.ReplyKeyboard);
+                    SittingsMenu.Execute();
                     //MessagesFromBot.Add(answ);
                     Console.WriteLine("настройки");
                     break;
