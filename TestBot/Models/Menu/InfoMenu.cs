@@ -10,7 +10,10 @@ namespace TestBot.Models.Menu
     class InfoMenu
     {
         public static int LikeValue { get; private set; } 
-        public static int DislikeValue { get; private set; } 
+        public static int DislikeValue { get; private set; }
+
+        public static bool Like { get; private set; } = false;
+        public static bool Dislike { get; private set; } = false;
         
 
         private static TelegramBotClient Bot=Program.bot;
@@ -36,30 +39,27 @@ namespace TestBot.Models.Menu
                         }
 
         }, true);
-
-        public static InlineKeyboardMarkup RateUs { get; private set; } = new InlineKeyboardMarkup(new[] {
+        /*
+        public static InlineKeyboardMarkup RateUs { get;} = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like")
-            },
-            new InlineKeyboardButton[]
-            {
+                InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like"),
                 InlineKeyboardButton.WithCallbackData("\U0001F494"+DislikeValue,"dislike")
-            }
-        });
 
-        private static InlineKeyboardMarkup SetKeyboard()
+            }
+        });*/
+
+        public static InlineKeyboardMarkup SetKeyboard()
         {
             InlineKeyboardMarkup Temp  = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like")
-            },
-            new InlineKeyboardButton[]
-            {
+                InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like"),
                 InlineKeyboardButton.WithCallbackData("\U0001F494"+DislikeValue,"dislike")
+
             }
         });
+            
             return Temp;
    
         }
@@ -79,7 +79,8 @@ namespace TestBot.Models.Menu
             switch (message.Text)
             {
                 case "Оцени нас":
-                    await Bot.SendTextMessageAsync(message.Chat.Id,"Оцени нас!\nНам просто интересно на скок это прикольно для тебя",replyMarkup: RateUs);
+                    await Bot.SendTextMessageAsync(message.Chat.Id,"Оцени нас!\nНам просто интересно на скок это прикольно для тебя",replyMarkup: SetKeyboard());
+                    //Bot.OnMessage -= BotOnMessageRecived;
                     break;
                 default:
                     break;
@@ -94,19 +95,38 @@ namespace TestBot.Models.Menu
             {
                 case "like":
                     //like
-                    //Console.WriteLine(LikeValue);
-                    LikeValue = 1;
                     Console.WriteLine(LikeValue);
-                    //bot.edit_message_text(chat_id = call.message.chat.id, message_id = call.message.message_id, text = "Пыщь")
-                    //bot.answer_callback_query(callback_query_id = call.id, show_alert = False, text = "Пыщь!")
-                    //await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id,e.CallbackQuery.Message.MessageId,"Спасибо за оценку",replyMarkup:RateUs);
-                    await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id,"lol",replyMarkup:SetKeyboard());
-                    //Console.WriteLine(LikeValue);
+                    if (Like == false)
+                    {
+                        if (Dislike == true) DislikeValue -= 1;
+                        LikeValue += 1; ;
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку",parseMode:Telegram.Bot.Types.Enums.ParseMode.Default,false,SetKeyboard());
+                        Like = true;
+                        Dislike = false;
+                    }
+                    else
+                    {
+                        await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже проголосовали", false);
+                    }
                     break;
                 case "dislike":
                     //dislike
-                    await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id,"lol",false);
+                    if (Dislike == false)
+                    {
+                        if (Like == true) LikeValue -= 1;
+                        DislikeValue += 1;
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard());
+                        Dislike = true;
+                        Like = false;
+
+                    }
+                    else
+                    {
+                        await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже проголосовали", false);
+                    }
+
                     break;
+
                 default:
                     break;
             }

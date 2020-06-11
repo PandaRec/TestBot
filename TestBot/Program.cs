@@ -74,8 +74,47 @@ namespace TestBot
                     //в главное меню
                     await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
                     break;
+                case "\U0001F43E":
+                    //near bars
+                    await bot.SendTextMessageAsync(message.Chat.Id, NearBars.AskLocation, replyMarkup: NearBars.ReplyKeyboardGeo);
+                    NearBars.Execute();
+                    Console.WriteLine("рядом");
+                    break;
+
+                case "\U0001F51D":
+                    //top of bars
+                    Console.WriteLine("топ");
+                    break;
+
+                case "\U00002049":
+                    //info about application and other secondary things
+                    await bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info, replyMarkup: InfoMenu.ReplyKeyboard);
+                    InfoMenu.Execute();
+                    //Program.MessagesFromBot.Add(answ);
+                    Console.WriteLine("инфо");
+                    break;
+
+                case "\U0001F50D":
+                    //search
+                    await bot.SendTextMessageAsync(message.Chat.Id, SearchMenu.Menu, replyMarkup: SearchMenu.ReplyKeyboard);
+                    SearchMenu.Execute();
+                    Console.WriteLine("поиск");
+                    break;
+
+                case "\U0001F52E":
+                    //search by conditions
+                    Console.WriteLine("поиск по критериям");
+                    break;
+
+                case "\U00002699":
+                    //sittings
+                    await bot.SendTextMessageAsync(message.From.Id, SittingsMenu.Greeting, replyMarkup: SittingsMenu.ReplyKeyboard);
+                    SittingsMenu.Execute();
+                    //MessagesFromBot.Add(answ);
+                    Console.WriteLine("настройки");
+                    break;
                 default:
-                    StartMenu.Execute();
+                    //StartMenu.Execute();
                     //await bot.SendTextMessageAsync(message.From.Id,"Это что то незнакомое...");
                     break;
 
