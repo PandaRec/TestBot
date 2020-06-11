@@ -42,6 +42,13 @@ namespace TestBot.Models.Menu
                         }
 
         }, true);
+
+        private static InlineKeyboardMarkup KeyboardContacts = new InlineKeyboardMarkup(new[] {
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithUrl("GitHub проекта",@"https://github.com/PandaRec/TestBot")
+            }
+        });
       
 
         public static InlineKeyboardMarkup SetKeyboard()
@@ -63,7 +70,8 @@ namespace TestBot.Models.Menu
         public static bool Contains(Telegram.Bot.Types.Message message)
         {
             if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return false;
-            if (message.Text.Equals("Оцени нас") || message.Text.Equals("\U00002049")) return true;
+            if (message.Text.Equals("Оцени нас") || message.Text.Equals("\U00002049")
+               || message.Text.Equals("Контакты") || message.Text.Equals("Сотрудничество") ) return true;
             else return false;
         }
         public static async void MessageRecived(object sender, MessageEventArgs e)
@@ -78,6 +86,12 @@ namespace TestBot.Models.Menu
 
                 switch (message.Text)
             {
+                case "Контакты":
+                    await Bot.SendTextMessageAsync(message.Chat.Id,"Можешь глянуть если интересно",replyMarkup:KeyboardContacts);
+                    break;
+                case "Сотрудничество":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "Реклама, покупка и тд - сюда:\nPandarec13@yandex.ru");
+                    break;
                 case "Оцени нас":
                     await Bot.SendTextMessageAsync(message.Chat.Id, "Оцени нас", replyMarkup: SetKeyboard());
                     break;
