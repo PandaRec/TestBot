@@ -9,11 +9,14 @@ namespace TestBot.Models.Menu
 {
     class InfoMenu
     {
+        public static Dictionary<long, bool> Like = new Dictionary<long, bool>();
+        public static Dictionary<long, bool> Dislike = new Dictionary<long, bool>();
+
         public static int LikeValue { get; private set; } 
         public static int DislikeValue { get; private set; }
 
-        public static bool Like { get; private set; } = false;
-        public static bool Dislike { get; private set; } = false;
+        //public static bool Like { get; private set; } = false;
+        //public static bool Dislike { get; private set; } = false;
         
 
         private static TelegramBotClient Bot=Program.bot;
@@ -39,19 +42,11 @@ namespace TestBot.Models.Menu
                         }
 
         }, true);
-        /*
-        public static InlineKeyboardMarkup RateUs { get;} = new InlineKeyboardMarkup(new[] {
-            new InlineKeyboardButton[]
-            {
-                InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like"),
-                InlineKeyboardButton.WithCallbackData("\U0001F494"+DislikeValue,"dislike")
-
-            }
-        });*/
+      
 
         public static InlineKeyboardMarkup SetKeyboard()
         {
-            InlineKeyboardMarkup Temp  = new InlineKeyboardMarkup(new[] {
+            InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
                 InlineKeyboardButton.WithCallbackData("\U00002764"+LikeValue,"like"),
@@ -65,29 +60,49 @@ namespace TestBot.Models.Menu
         }
 
 
-
-        public static void Execute()
+        public static bool Contains(Telegram.Bot.Types.Message message)
         {
-            Bot.OnCallbackQuery += BotOnCallbackQueryRecived;
-            Bot.OnMessage += BotOnMessageRecived;
+            if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return false;
+            if (message.Text.Equals("Оцени нас") || message.Text.Equals("\U00002049")) return true;
+            else return false;
+        }
+        public static async void MessageRecived(object sender, MessageEventArgs e)
+        {
+
+            var message = e.Message;
+            if (!Like.ContainsKey(message.Chat.Id))
+            {
+                Like.Add(message.Chat.Id, false);
+                Dislike.Add(message.Chat.Id, false);
+            }
+
+                switch (message.Text)
+            {
+                case "Оцени нас":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "Оцени нас", replyMarkup: SetKeyboard());
+                    break;
+                default:
+                    break;
+            }
 
         }
-
-        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
+        /*
+        private static async void BotOnMessageRecivedd(object sender, MessageEventArgs e)
         {
             var message = e.Message;
             switch (message.Text)
             {
                 case "Оцени нас":
-                    await Bot.SendTextMessageAsync(message.Chat.Id,"Оцени нас!\nНам просто интересно на скок это прикольно для тебя",replyMarkup: SetKeyboard());
-                    //Bot.OnMessage -= BotOnMessageRecived;
+                     await Bot.SendTextMessageAsync(message.Chat.Id, "Оцени нас",replyMarkup:SetKeyboard());
+
                     break;
                 default:
                     break;
             }
         }
+        */
 
-        private static async void BotOnCallbackQueryRecived(object sender, CallbackQueryEventArgs e)
+        public static async void CallbackQueryRecived(object sender, CallbackQueryEventArgs e)
         {
             var message = e.CallbackQuery.Data;
             
@@ -96,13 +111,13 @@ namespace TestBot.Models.Menu
                 case "like":
                     //like
                     Console.WriteLine(LikeValue);
-                    if (Like == false)
+                    if (Like[e.CallbackQuery.Message.Chat.Id] == false)
                     {
-                        if (Dislike == true) DislikeValue -= 1;
+                        if (Dislike[e.CallbackQuery.Message.Chat.Id] == true) DislikeValue -= 1;
                         LikeValue += 1; ;
-                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку",parseMode:Telegram.Bot.Types.Enums.ParseMode.Default,false,SetKeyboard());
-                        Like = true;
-                        Dislike = false;
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку",replyMarkup:SetKeyboard());
+                        Like[e.CallbackQuery.Message.Chat.Id] = true;
+                        Dislike[e.CallbackQuery.Message.Chat.Id] = false;
                     }
                     else
                     {
@@ -111,13 +126,13 @@ namespace TestBot.Models.Menu
                     break;
                 case "dislike":
                     //dislike
-                    if (Dislike == false)
+                    if (Dislike[e.CallbackQuery.Message.Chat.Id] == false)
                     {
-                        if (Like == true) LikeValue -= 1;
+                        if (Like[e.CallbackQuery.Message.Chat.Id] == true) LikeValue -= 1;
                         DislikeValue += 1;
                         await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard());
-                        Dislike = true;
-                        Like = false;
+                        Dislike[e.CallbackQuery.Message.Chat.Id] = true;
+                        Like[e.CallbackQuery.Message.Chat.Id] = false;
 
                     }
                     else

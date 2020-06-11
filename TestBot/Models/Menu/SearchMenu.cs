@@ -14,17 +14,19 @@ namespace TestBot.Models.Menu
         public static ReplyKeyboardMarkup ReplyKeyboard { get; } = new ReplyKeyboardMarkup(new[] { new KeyboardButton("Назад") }, true);
 
         public static string Menu { get; } = "Введите название бара";
-        public static void Execute()
+        
+
+        public static bool Contains(Telegram.Bot.Types.Message message)
         {
-            Bot.OnMessage += BotOnMessageRecived;
-
+            if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return false;
+                if (message.Text.Equals("\U0001F50D")) return true;
+            else return false;
         }
-
-        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
+        public static async void MessageRecived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
             //тут запрос к бд на поиск результата
-
+            
             switch (message.Text)
             {
 
@@ -34,6 +36,11 @@ namespace TestBot.Models.Menu
                     break;
             }
 
+        }
+        private static void Find()
+        {
+            bool flag = true;
+          
         }
     }
 }

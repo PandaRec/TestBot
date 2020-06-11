@@ -26,24 +26,22 @@ namespace TestBot.Models.Menu
 
         }, true);
 
-        public static void Execute()
+    
+        public static bool Contains(Telegram.Bot.Types.Message message)
         {
-            Bot.OnMessage += BotOnMessageRecived;
-
+            if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return false;
+            if (message.Text.Equals("Очистить истрию с ботом")) return true;
+            else return false;
         }
-
-        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
+        public static async void MessageRecived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
             switch (message.Text)
             {
                 case "Очистить истрию с ботом":
-                    Clear(Program.MessagesFromUser,Program.MessagesFromBot);
+                    //Clear(Program.MessagesFromUser,Program.MessagesFromBot);
+                    await Bot.SendTextMessageAsync(message.Chat.Id,"Типо почистил");
                     break;
-               /* case "Назад":
-                    await Bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
-                    break;
-                    */
                 default:
                     break;
 
@@ -52,6 +50,7 @@ namespace TestBot.Models.Menu
 
         private static async void Clear(List<Telegram.Bot.Types.Message> MsgFromUser,List<Telegram.Bot.Types.Message> MsgFromBot)
         {
+            
             foreach (var item in MsgFromBot)
             {
                 try { await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId); }
@@ -66,7 +65,7 @@ namespace TestBot.Models.Menu
 
             }
             Program.MessagesFromUser.Clear();
-
+            
         }
         
 

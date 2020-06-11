@@ -45,12 +45,19 @@ namespace TestBot.Models.Menu
 
         }, true);
 
-        public static void Execute()
+        public static bool Contains(Telegram.Bot.Types.Message message)
         {
-            Bot.OnMessage += BotOnMessageRecived;
+            if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return true;
+                if (message.Text.Equals("\U0001F43E") || message.Text.Equals("Показать где я сейчас")
+                || message.Text.Equals("100m") || message.Text.Equals("500m") || message.Text.Equals("1km")
+                || message.Text.Equals("2km") || message.Text.Equals("3km") || message.Text.Equals("5km")
+                || message.Text.Equals("8km")) return true;
+            else return false;
         }
 
-        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
+        
+
+        public static async void MessageRecived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
 
@@ -76,24 +83,31 @@ namespace TestBot.Models.Menu
                     break;
                     */
                 case "100m":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "100m");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "500m":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "500m");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "1km":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "1km");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "2km":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "2km");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "3km":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "3km");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "5km":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "5km");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "8km":
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "8km");
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 default:

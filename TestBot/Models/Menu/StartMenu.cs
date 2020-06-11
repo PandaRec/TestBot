@@ -39,19 +39,19 @@ namespace TestBot.Models.Menu
         public static string menu { get; } = "Вы в главном меню";
 
 
-        public static void Execute()
+        /*public static void Execute()
         {
              Bot.OnMessage += BotOnMessageRecived;
 
-        }
-
-        private static async void BotOnMessageRecived(object sender, MessageEventArgs e)
+        }*/
+        
+        private static async void BotOnMessageReciveddd(object sender, MessageEventArgs e)
         {
             var message = e.Message;
             Console.WriteLine(message.Type);
             switch (message.Text)
             {
-               
+               /*
                 case "\U0001F43E":
                     //near bars
                     await Bot.SendTextMessageAsync(message.Chat.Id, NearBars.AskLocation, replyMarkup: NearBars.ReplyKeyboardGeo);
@@ -66,8 +66,9 @@ namespace TestBot.Models.Menu
 
                 case "\U00002049":
                     //info about application and other secondary things
+                    InfoMenu inf = new InfoMenu();
                     await Bot.SendTextMessageAsync(message.Chat.Id, InfoMenu.Info, replyMarkup: InfoMenu.ReplyKeyboard);
-                    InfoMenu.Execute();
+                    inf.Execute();
                     //Program.MessagesFromBot.Add(answ);
                     Console.WriteLine("инфо");
                     break;
@@ -91,11 +92,14 @@ namespace TestBot.Models.Menu
                     //MessagesFromBot.Add(answ);
                     Console.WriteLine("настройки");
                     break;
-
+                    */
                 default:
                     break;
 
             }
+
         }
+
+
     }
 }
