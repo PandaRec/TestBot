@@ -17,7 +17,8 @@ namespace ParseSites.Yandex
             HttpClient client = new HttpClient();
             List<string> pos = new List<string>();
 
-            string url = "https://geocode-maps.yandex.ru/1.x/?format=json&apikey="+APIKey+"&"+Address;
+            string url = "https://geocode-maps.yandex.ru/1.x/?format=json&apikey="+APIKey+ "&geocode=" + Address;
+
             string stuff = client.GetStringAsync(url).GetAwaiter().GetResult();
             var rootobject = JsonConvert.DeserializeObject<Rootobject>(stuff);
             //Console.WriteLine(rootobject.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos);
