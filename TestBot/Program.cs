@@ -27,10 +27,8 @@ namespace TestBot
         
         static void Main(string[] args)
         {
-            ReadBD();
 
-
-            WebProxy proxyObject = new WebProxy("176.53.40.222:3128/", true);
+            WebProxy proxyObject = new WebProxy("80.187.140.26:8080/", true);
             bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI",proxyObject);
 
             bot.OnMessage += BotOnMessageRecived;
@@ -44,6 +42,9 @@ namespace TestBot
             Console.WriteLine("lol");
             var me = bot.GetMeAsync().Result;
             Console.WriteLine(me.FirstName);
+
+            ReadBD();
+
             bot.StartReceiving();
             Console.ReadLine();
             bot.StopReceiving();
@@ -264,7 +265,8 @@ namespace TestBot
                 Console.WriteLine("");
                 foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
                 {
-                   Console.WriteLine(dbDataRecord["BarName"] + "   " + dbDataRecord["Latitude"] + "   " + dbDataRecord["Longitude"] + "   " + dbDataRecord["Phone"] + "   " + dbDataRecord["WorkTime"] + "   " + dbDataRecord["Pictures"]);
+                    bar = new Models.ModelOfBar();
+                    //Console.WriteLine(dbDataRecord["BarName"] + "   " + dbDataRecord["Latitude"] + "   " + dbDataRecord["Longitude"] + "   " + dbDataRecord["Phone"] + "   " + dbDataRecord["WorkTime"] + "   " + dbDataRecord["Pictures"]);
                     bar.BarName = dbDataRecord["BarName"].ToString();
                     bar.Lat = Convert.ToDouble(dbDataRecord["Latitude"]);
                     bar.Lng = Convert.ToDouble(dbDataRecord["Longitude"]);
@@ -290,7 +292,8 @@ namespace TestBot
                 Console.WriteLine("");
                 foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
                 {
-                    Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
+                    items = new Models.ModelOfMenuItems();
+                    // Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
                     items.Title = dbDataRecord["Title"].ToString();
                     items.Subtitle = dbDataRecord["Subtitle"].ToString();
                     items.Subtitle_2 = dbDataRecord["Subtitle_2"].ToString();
@@ -302,6 +305,7 @@ namespace TestBot
             }
             else
                 Console.WriteLine("Запрос не вернул строк в MenuItems");
+            Console.WriteLine("чтение завершено");
             npgSqlDataReader.Close();
             npgSqlConnection.Close();
                 

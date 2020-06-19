@@ -77,7 +77,42 @@ namespace ParseSites.Site1
                         HtmlDocument doc_2 = new HtmlDocument();
                         doc_2.LoadHtml(getRequest("http://gdebar.ru" + item.Attributes["href"].Value + "/menu"));
                         HtmlNodeCollection Menu = doc_2.DocumentNode.SelectNodes("//div[@class = 'menu__dish d-flex align-items-center justify-content-between p-2']");
-                        if (Menu == null) continue;
+                        //if (Menu == null) continue;
+                        if (doc_2.DocumentNode.SelectNodes("//div[@class = 'text-center alert alert-danger h1']")!=null ) continue;
+                        if (Menu == null)
+                        {
+                            BarInfo info = new BarInfo();
+                            
+                            HtmlNodeCollection ff = doc_2.DocumentNode.SelectNodes("//div[@id = 'bar-gallery-main']/div/a");// отсюда берем ссылки на пикчи
+                            if (ff != null)
+                            {
+                                foreach (var item_3 in ff)
+                                {
+                                    info.PictureLinks.Add(item_3.Attributes["href"].Value);
+                                }
+                            }
+                            else info.PictureLinks.Add(null);
+
+                            if (doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.ToLower().Contains("работает"))
+                                info.WorkTime = doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.Replace("\r\n", "").Split("работает ")[1].Replace("   ", "");
+                            else info.WorkTime = "отсутсвует";
+                            if (doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']") != null)
+                                info.Phone = doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']")[0].InnerText.Trim();
+                            else
+                                info.Phone = doc_2.DocumentNode.SelectNodes("//div[@class = 'phone bar__main--info__line d-flex align-items-center justify-content-start mb-4 w-100 flex-nowrap']")[0].InnerText.Trim();
+                            string add = doc_2.DocumentNode.SelectNodes("//span[@class = 'font-weight-light mr-0']")[0].InnerText.Trim();
+                            List<string> poss = Yandex.Yandex.GetPos(apikey, add);
+
+                            info.Lat = Convert.ToDouble(poss[0].Split(" ")[1].Replace(".", ","));       //широта
+                            info.Lng = Convert.ToDouble(poss[0].Split(" ")[0].Replace(".", ","));       //долгота 
+
+                            info.BarName = item.InnerText.Trim();
+                            info.HasMenu = false;
+                            barinfo_list.Add(info);
+
+                            continue;
+
+                        }
                         BarInfo barinfo = new BarInfo();
                         MenuItems menuitems = new MenuItems();
 
@@ -156,6 +191,7 @@ namespace ParseSites.Site1
                         barinfo.Lng = Convert.ToDouble(pos[0].Split(" ")[0].Replace(".", ","));       //долгота 
 
                         barinfo.BarName = item.InnerText.Trim();
+                        barinfo.HasMenu = true;
                         barinfo_list.Add(barinfo);
                     }
                     Console.WriteLine(CountOfPages);
@@ -232,7 +268,7 @@ namespace ParseSites.Site1
         {
 
             //запись в BarInfo
-            string sqlquery= "INSERT INTO barinfo (BarName, Latitude, Longitude, Phone, WorkTime, Pictures) VALUES (@BarName, @Latitude, @Longitude, @Phone, @WorkTime, @Pictures)";
+            string sqlquery= "INSERT INTO barinfo (BarName, Latitude, Longitude, Phone, WorkTime, HasMenu, Pictures) VALUES (@BarName, @Latitude, @Longitude, @Phone, @WorkTime, @HasMenu, @Pictures)";
             string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
             NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
             npgSqlConnection.Open();
@@ -245,6 +281,7 @@ namespace ParseSites.Site1
             npgSqlCommand.Parameters.Add("Longitude", NpgsqlTypes.NpgsqlDbType.Real);
             npgSqlCommand.Parameters.Add("Phone", NpgsqlTypes.NpgsqlDbType.Varchar);
             npgSqlCommand.Parameters.Add("WorkTime", NpgsqlTypes.NpgsqlDbType.Varchar);
+            npgSqlCommand.Parameters.Add("HasMenu", NpgsqlTypes.NpgsqlDbType.Boolean);
             npgSqlCommand.Parameters.Add("Pictures", NpgsqlTypes.NpgsqlDbType.Text);
 
             foreach (var item in bar)
@@ -254,6 +291,8 @@ namespace ParseSites.Site1
                 npgSqlCommand.Parameters["Longitude"].Value = item.Lng;
                 npgSqlCommand.Parameters["Phone"].Value = item.Phone;
                 npgSqlCommand.Parameters["WorkTime"].Value = item.WorkTime;
+                npgSqlCommand.Parameters["HasMenu"].Value = item.HasMenu;
+
                 string pictures = "";
                 foreach (var item_2 in item.PictureLinks)
                 {
