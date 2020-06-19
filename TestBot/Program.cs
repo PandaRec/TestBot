@@ -28,8 +28,8 @@ namespace TestBot
         static void Main(string[] args)
         {
 
-            WebProxy proxyObject = new WebProxy("80.187.140.26:8080/", true);
-            bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI",proxyObject);
+            WebProxy proxyObject = new WebProxy("163.172.28.22:80/", true);
+            bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI");
 
             bot.OnMessage += BotOnMessageRecived;
             bot.OnCallbackQuery += BotOnCallbackQueryRecived;
@@ -54,7 +54,13 @@ namespace TestBot
 
         private static void BotOnCallbackQueryRecived(object sender, CallbackQueryEventArgs e)
         {
-            InfoMenu.CallbackQueryRecived(sender, e);
+            //InfoMenu.CallbackQueryRecived(sender, e);
+
+            if (NearBars.ContainsData(e.CallbackQuery))
+            {
+                Console.WriteLine("ttt");
+                NearBars.CallBackQRecived(sender,e);
+            }
         }
 
         private static async void BotOnMessageRecived(object sender, Telegram.Bot.Args.MessageEventArgs e)
@@ -272,6 +278,7 @@ namespace TestBot
                     bar.Lng = Convert.ToDouble(dbDataRecord["Longitude"]);
                     bar.Phone= dbDataRecord["Phone"].ToString();
                     bar.WorkTime= dbDataRecord["WorkTime"].ToString();
+                    bar.HasMenu = Convert.ToBoolean(dbDataRecord["HasMenu"]);
                     string[] temp = dbDataRecord["Pictures"].ToString().Split("|");
                     foreach (var item in temp)
                         bar.PictureLinks.Add(item);
