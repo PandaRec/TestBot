@@ -10,6 +10,8 @@ using System.Net.Http;
 using System.Text.Json;
 using Newtonsoft.Json;
 using Telegram.Bot.Args;
+using Npgsql;
+using System.Data.Common;
 
 namespace TestBot
 {
@@ -19,19 +21,19 @@ namespace TestBot
         private static Telegram.Bot.Types.Message answ = null;
         public static List<Telegram.Bot.Types.Message> MessagesFromBot { get; private set; } = new List<Telegram.Bot.Types.Message>();
         public static List<Telegram.Bot.Types.Message> MessagesFromUser { get; private set; } = new List<Telegram.Bot.Types.Message>();
-        private static Telegram.Bot.Types.Location UserLocation;
-
-
+        //private static Telegram.Bot.Types.Location UserLocation;
+        public static List<Models.ModelOfBar> BarInfo { get; private set; } = new List<Models.ModelOfBar>();
+        public static List<Models.ModelOfMenuItems> MenuItems { get; private set; } = new List<Models.ModelOfMenuItems>();
+        
         static void Main(string[] args)
         {
-           
+            ReadBD();
+
 
             WebProxy proxyObject = new WebProxy("176.53.40.222:3128/", true);
-
-
             bot = new TelegramBotClient("1257487397:AAHPbBjcQD1dzw8FYV7BXN3CD-1alTrR-kI",proxyObject);
+
             bot.OnMessage += BotOnMessageRecived;
-            
             bot.OnCallbackQuery += BotOnCallbackQueryRecived;
 
             
@@ -241,7 +243,70 @@ namespace TestBot
 
 
         }
+        /// <summary>
+        /// Чтение данных из бд
+        /// </summary>
+        private static void ReadBD()
+        {
+            //выборка данных из бд
+            Models.ModelOfBar bar = new Models.ModelOfBar();
+            Models.ModelOfMenuItems items = new Models.ModelOfMenuItems();
 
-       
+            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
+            NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
+            npgSqlConnection.Open();
+            Console.WriteLine("Соединение с БД открыто");
+            NpgsqlCommand npgSqlCommand = new NpgsqlCommand("SELECT * FROM barinfo", npgSqlConnection);
+            NpgsqlDataReader npgSqlDataReader = npgSqlCommand.ExecuteReader();
+            if (npgSqlDataReader.HasRows)
+            {
+                Console.WriteLine("Таблица: BarInfo");
+                Console.WriteLine("");
+                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
+                {
+                   Console.WriteLine(dbDataRecord["BarName"] + "   " + dbDataRecord["Latitude"] + "   " + dbDataRecord["Longitude"] + "   " + dbDataRecord["Phone"] + "   " + dbDataRecord["WorkTime"] + "   " + dbDataRecord["Pictures"]);
+                    bar.BarName = dbDataRecord["BarName"].ToString();
+                    bar.Lat = Convert.ToDouble(dbDataRecord["Latitude"]);
+                    bar.Lng = Convert.ToDouble(dbDataRecord["Longitude"]);
+                    bar.Phone= dbDataRecord["Phone"].ToString();
+                    bar.WorkTime= dbDataRecord["WorkTime"].ToString();
+                    string[] temp = dbDataRecord["Pictures"].ToString().Split("|");
+                    foreach (var item in temp)
+                        bar.PictureLinks.Add(item);
+                    BarInfo.Add(bar);
+                }
+            }
+            else
+                Console.WriteLine("Запрос не вернул строк в BarInfo");
+            npgSqlDataReader.Close();
+
+
+
+            npgSqlCommand = new NpgsqlCommand("SELECT * FROM menuitems", npgSqlConnection);
+            npgSqlDataReader = npgSqlCommand.ExecuteReader();
+            if (npgSqlDataReader.HasRows)
+            {
+                Console.WriteLine("Таблица: MenuItems");
+                Console.WriteLine("");
+                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
+                {
+                    Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
+                    items.Title = dbDataRecord["Title"].ToString();
+                    items.Subtitle = dbDataRecord["Subtitle"].ToString();
+                    items.Subtitle_2 = dbDataRecord["Subtitle_2"].ToString();
+                    items.Dish = dbDataRecord["Dish"].ToString();
+                    items.Price = Convert.ToInt32(dbDataRecord["Price"]);
+                    items.BarName = dbDataRecord["BarName"].ToString();
+                    MenuItems.Add(items);
+                }
+            }
+            else
+                Console.WriteLine("Запрос не вернул строк в MenuItems");
+            npgSqlDataReader.Close();
+            npgSqlConnection.Close();
+                
+        }
+
+
     }
 }
