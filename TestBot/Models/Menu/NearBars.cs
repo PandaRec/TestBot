@@ -21,11 +21,13 @@ namespace TestBot.Models.Menu
 
         private static List<ModelOfBar> NearBarsList = new List<ModelOfBar>();
 
+        private static List<ModelOfMenuItems> MenuOfNearBar = new List<ModelOfMenuItems>();
+
         private static Dictionary<long, int> counter = new Dictionary<long, int>();
 
         private static Telegram.Bot.Types.Message answ = null;
 
-        private static List<string> CallBackData = new List<string>();
+        public static List<string> CallBackData { get; private set; } = new List<string>();
 
 
         public static ReplyKeyboardMarkup ReplyKeyboardGeo { get; } = new ReplyKeyboardMarkup(new[] {
@@ -71,18 +73,128 @@ namespace TestBot.Models.Menu
             if (callback.Data.Equals("Menu") || callback.Data.Equals("Next") || callback.Data.Equals("Photos") || callback.Data.Equals("Back")) return true;
             else return false;
         }
+
+        public static InlineKeyboardMarkup SetKeyboard(long ChatId, bool title,bool subtitle,bool subtitle_2,string nameoftitle)
+        {
+            List<List<InlineKeyboardButton>> rowList = new List<List<InlineKeyboardButton>>();
+
+            if (title == true && subtitle == false&& subtitle_2 == false)
+            {
+                // вывод кнопок subtitle
+                List<string> TempNames = new List<string>();
+                foreach (var item in MenuOfNearBar)
+                {
+                    if (!TempNames.Contains(item.Subtitle) && item.Title==nameoftitle)
+                    {
+                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+                        inlineKeyboardButton.Text = item.Subtitle;
+                        inlineKeyboardButton.CallbackData = item.Subtitle;
+                        List<InlineKeyboardButton> keyboardButtonsRow1 = new List<InlineKeyboardButton>();
+                        keyboardButtonsRow1.Add(inlineKeyboardButton);
+                        rowList.Add(keyboardButtonsRow1);
+                        TempNames.Add(item.Subtitle);
+                        CallBackData.Add(item.Subtitle);
+
+                    }
+                }
+                return new InlineKeyboardMarkup(rowList);
+
+            }
+            else if (title == true && subtitle == true && subtitle_2 == false)
+            {
+                // вывод кнопок subtitle & subtitle_2
+                List<string> TempNames = new List<string>();
+                foreach (var item in MenuOfNearBar)
+                {
+                    if (!TempNames.Contains(item.Subtitle) && item.Subtitle!=nameoftitle && item.Title==nameoftitle)
+                    {
+                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+                        inlineKeyboardButton.Text = item.Subtitle;
+                        inlineKeyboardButton.CallbackData = item.Subtitle;
+                        List<InlineKeyboardButton> keyboardButtonsRow1 = new List<InlineKeyboardButton>();
+                        keyboardButtonsRow1.Add(inlineKeyboardButton);
+                        rowList.Add(keyboardButtonsRow1);
+                        TempNames.Add(item.Subtitle);
+                        CallBackData.Add(item.Subtitle);
+
+                    }
+                }
+                foreach (var item in MenuOfNearBar)
+                {
+                    if (!TempNames.Contains(item.Subtitle_2) && item.Subtitle==nameoftitle)
+                    {
+                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+                        inlineKeyboardButton.Text = item.Subtitle_2;
+                        inlineKeyboardButton.CallbackData = item.Subtitle_2;
+                        List<InlineKeyboardButton> keyboardButtonsRow1 = new List<InlineKeyboardButton>();
+                        keyboardButtonsRow1.Add(inlineKeyboardButton);
+                        rowList.Add(keyboardButtonsRow1);
+                        TempNames.Add(item.Subtitle_2);
+                        CallBackData.Add(item.Subtitle_2);
+
+                    }
+                }
+
+                return new InlineKeyboardMarkup(rowList);
+            }
+            else if(title == false && subtitle==true && subtitle_2==false)
+            {
+                // вывод кнопок subtitle_2
+                List<string> TempNames = new List<string>();
+                foreach (var item in MenuOfNearBar)
+                {
+                    if (!TempNames.Contains(item.Subtitle_2) && item.Subtitle==nameoftitle)
+                    {
+                        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+                        inlineKeyboardButton.Text = item.Subtitle_2;
+                        inlineKeyboardButton.CallbackData = item.Subtitle_2;
+                        List<InlineKeyboardButton> keyboardButtonsRow1 = new List<InlineKeyboardButton>();
+                        keyboardButtonsRow1.Add(inlineKeyboardButton);
+                        rowList.Add(keyboardButtonsRow1);
+                        TempNames.Add(item.Subtitle_2);
+                        CallBackData.Add(item.Subtitle_2);
+                        //Console.WriteLine(item.Subtitle_2);
+                    }
+                }
+                return new InlineKeyboardMarkup(rowList);
+
+            }
+            else if(title == false && subtitle == false && subtitle_2 == false)
+            {
+                Console.WriteLine("не возможно создать клаву тк нету совпадений в меню");
+                return null;
+            }
+            else
+            {
+                Console.WriteLine("нет удовлетворяющих условий для создания клавиатуры");
+                return null;
+
+            }
+        }
         public static InlineKeyboardMarkup SetKeyboard(long ChatId)
         {
             CallBackData.Clear();
+            MenuOfNearBar.Clear();
             List<string> titles = new List<string>();
             List<List<InlineKeyboardButton>> rowList = new List<List<InlineKeyboardButton>>();
 
             foreach (var item in Program.MenuItems)
             {
-                if (item.Title != "" && !titles.Contains(item.Title) && item.BarName==NearBarsList[counter[ChatId]].BarName)
-                    titles.Add(item.Title);
-                if (item.Subtitle != "" && !titles.Contains(item.Subtitle) && item.BarName == NearBarsList[counter[ChatId]].BarName)
-                    titles.Add(item.Subtitle);
+                if (item.BarName == NearBarsList[counter[ChatId]].BarName)
+                {
+                    if (item.Title == "" && item.Subtitle != "" && !titles.Contains(item.Subtitle))
+                    {
+                        titles.Add(item.Subtitle);
+                        Console.WriteLine("sub - "+item.Subtitle);
+
+                    }
+                    if (item.Subtitle != "" && item.Title != "" && !titles.Contains(item.Title))
+                    {
+                        titles.Add(item.Title);
+                        Console.WriteLine("tit - "+ item.Title);
+                    }
+                    MenuOfNearBar.Add(item);
+                }
             }
             Console.WriteLine(titles.Count);
             foreach (var item in titles)
@@ -99,10 +211,9 @@ namespace TestBot.Models.Menu
                 rowList.Add(keyboardButtonsRow1);
                 CallBackData.Add(item);
             }
-            //InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(rowList);
             return new InlineKeyboardMarkup(rowList);
         }
-        public static InlineKeyboardMarkup SetKeyboard(bool hasmenu,bool hasphotos,bool first)
+        public static InlineKeyboardMarkup SetKeyboard(bool hasmenu, bool hasphotos, bool first)
         {
             if (hasmenu == true && hasphotos == true && first == true)
             {
@@ -238,12 +349,12 @@ namespace TestBot.Models.Menu
                 Console.WriteLine("ffff");
                 if (message.Location == null)
                 {
-                    await Bot.SendTextMessageAsync(message.Chat.Id,"Может ты забыл включить геолокацию?");
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "Может ты забыл включить геолокацию?");
                     return;
                 }
                 LatitudePos = message.Location.Latitude;
                 LongitudePos = message.Location.Longitude;
-                await Bot.SendTextMessageAsync(message.Chat.Id,Greeting,replyMarkup:ReplyKeyboard);
+                await Bot.SendTextMessageAsync(message.Chat.Id, Greeting, replyMarkup: ReplyKeyboard);
 
             }
             if (!counter.ContainsKey(message.Chat.Id))
@@ -254,10 +365,12 @@ namespace TestBot.Models.Menu
             {
                 counter[message.Chat.Id] = 0;
             }
+
             switch (message.Text)
             {
-                
+
                 case "100m":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(100);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 100m ничего не найдено");
@@ -292,6 +405,7 @@ namespace TestBot.Models.Menu
                     }
                     break;
                 case "500m":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(500);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 500m ничего не найдено");
@@ -323,9 +437,10 @@ namespace TestBot.Models.Menu
 
                             }
                         }
-                    }                    
+                    }
                     break;
                 case "1km":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(1000);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 1km ничего не найдено");
@@ -360,6 +475,7 @@ namespace TestBot.Models.Menu
                     }
                     break;
                 case "2km":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(2000);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 2km ничего не найдено");
@@ -394,6 +510,7 @@ namespace TestBot.Models.Menu
                     }
                     break;
                 case "3km":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(3000);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 3km ничего не найдено");
@@ -403,11 +520,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true,true,true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true,false,true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
 
                             }
 
@@ -416,12 +533,12 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false,true,true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false,false,true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
 
                             }
                         }
@@ -429,6 +546,7 @@ namespace TestBot.Models.Menu
                     //тут вывод того, что удалось найти в FindNears
                     break;
                 case "5km":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(5000);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 5km ничего не найдено");
@@ -463,6 +581,7 @@ namespace TestBot.Models.Menu
                     }
                     break;
                 case "8km":
+                    CallBackData.Clear();
                     NearBarsList = FindNears(8000);
                     if (NearBarsList.Count == 0)
                         await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 8km ничего не найдено");
@@ -509,23 +628,24 @@ namespace TestBot.Models.Menu
             switch (callback)
             {
                 case "Menu":
-                    await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id,"Категории меню:",replyMarkup: SetKeyboard(e.CallbackQuery.Message.Chat.Id));
+                    await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Категории меню:", replyMarkup: SetKeyboard(e.CallbackQuery.Message.Chat.Id));
                     break;
                 case "Next":
+                    CallBackData.Clear();
                     Console.WriteLine("Next");
-                    if (NearBarsList.Count > counter[e.CallbackQuery.Message.Chat.Id]+1)
+                    if (NearBarsList.Count > counter[e.CallbackQuery.Message.Chat.Id] + 1)
                     {
                         Console.WriteLine(NearBarsList.Count);
-                        Console.WriteLine(counter[e.CallbackQuery.Message.Chat.Id]+ "   -   "+e.CallbackQuery.Message.Chat.Id);
+                        Console.WriteLine(counter[e.CallbackQuery.Message.Chat.Id] + "   -   " + e.CallbackQuery.Message.Chat.Id);
                         counter[e.CallbackQuery.Message.Chat.Id] += 1;
 
                         if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu == true)
                         {
                             if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                if(answ!=null)
+                                if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ=await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, false));
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, false));
                             }
                             else
                             {
@@ -542,7 +662,7 @@ namespace TestBot.Models.Menu
                             {
                                 if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ =await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, false));
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, false));
 
                             }
                             else
@@ -553,6 +673,8 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        //CallBackData.Clear();
+
                     }
                     else
                     {
@@ -561,10 +683,11 @@ namespace TestBot.Models.Menu
 
                     break;
                 case "Back":
-                    if (counter[e.CallbackQuery.Message.Chat.Id]>0)
+                    CallBackData.Clear();
+                    if (counter[e.CallbackQuery.Message.Chat.Id] > 0)
                     {
                         Console.WriteLine(counter[e.CallbackQuery.Message.Chat.Id] + "   -   " + e.CallbackQuery.Message.Chat.Id);
-                        counter[e.CallbackQuery.Message.Chat.Id]-=1;
+                        counter[e.CallbackQuery.Message.Chat.Id] -= 1;
 
                         if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu == true)
                         {
@@ -600,7 +723,10 @@ namespace TestBot.Models.Menu
                                 answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, false, false));
 
                             }
+
                         }
+                        //CallBackData.Clear();
+
                     }
                     break;
                 case "Photos":
@@ -611,15 +737,15 @@ namespace TestBot.Models.Menu
         }
 
 
-        private static List<ModelOfBar>  FindNears( int range)//float latitude,float longitude,
+        private static List<ModelOfBar> FindNears(int range)//float latitude,float longitude,
         {
             List<ModelOfBar> bars = new List<ModelOfBar>();
             foreach (var item in Program.BarInfo)
             {
-                Console.WriteLine("lat - "+item.Lat);
-                Console.WriteLine("lng - "+item.Lng);
-                Console.WriteLine("me lat - "+LatitudePos);
-                Console.WriteLine( "me lng - "+LongitudePos);
+                Console.WriteLine("lat - " + item.Lat);
+                Console.WriteLine("lng - " + item.Lng);
+                Console.WriteLine("me lat - " + LatitudePos);
+                Console.WriteLine("me lng - " + LongitudePos);
 
                 double lat1 = LatitudePos * Math.PI / 180;
                 double lat2 = item.Lat * Math.PI / 180;
@@ -629,13 +755,13 @@ namespace TestBot.Models.Menu
                 double delta_lat = (lat2 - lat1);
                 double delta_lng = (lng2 - lng1);
 
-                double dist =  (6378137 * Math.Acos(Math.Cos( lat1) * Math.Cos( lat2) * Math.Cos( lng1 - lng2) + Math.Sin( lat1) * Math.Sin( lat2)));
+                double dist = (6378137 * Math.Acos(Math.Cos(lat1) * Math.Cos(lat2) * Math.Cos(lng1 - lng2) + Math.Sin(lat1) * Math.Sin(lat2)));
                 Console.WriteLine(Math.Round(dist));
 
                 if (Math.Round(dist) < range) bars.Add(item);
 
 
-               
+
 
             }
             if (bars.Count > 0)
@@ -647,17 +773,48 @@ namespace TestBot.Models.Menu
 
         }
 
-       private static string SetCaption(long ChatId)
+        private static string SetCaption(long ChatId)
         {
-            if(NearBarsList[counter[ChatId]].WorkTime.Contains("отсутствует"))
-            return NearBarsList[counter[ChatId]].BarName + "\n"
-            + NearBarsList[counter[ChatId]].Phone + "\n"
-            +"Режим работы :"+ NearBarsList[counter[ChatId]].WorkTime;
+            if (NearBarsList[counter[ChatId]].WorkTime.Contains("отсутствует"))
+                return NearBarsList[counter[ChatId]].BarName + "\n"
+                + NearBarsList[counter[ChatId]].Phone + "\n"
+                + "Режим работы :" + NearBarsList[counter[ChatId]].WorkTime;
             else return NearBarsList[counter[ChatId]].BarName + "\n"
             + NearBarsList[counter[ChatId]].Phone + "\n"
             + NearBarsList[counter[ChatId]].WorkTime;
-       }
+        }
+        public static void GetMenuItems(string NamOfTitle,long ChatId)
+        {
+            
+            string MenuItems = string.Empty;
+            bool title = false;
+            bool subtitle = false;
+            bool subtitle_2 = false;
+            foreach (var item in MenuOfNearBar)
+            {
+                if (item.Title == NamOfTitle) title = true;
+                if (item.Subtitle == NamOfTitle) subtitle = true;
+                if (item.Subtitle_2 == NamOfTitle) subtitle_2 = true;
+            }
+            Console.WriteLine(NamOfTitle);
+            Console.WriteLine(title +"" +subtitle +"" + subtitle_2);
 
+            if ((title == true || subtitle == true) && ( subtitle_2==false))
+            {
+                // нужны кнопки
+                Bot.SendTextMessageAsync(ChatId,"Выберите категорию",replyMarkup: SetKeyboard(ChatId, title, subtitle, subtitle_2,NamOfTitle));
+            }
+            else if (subtitle_2 == true)
+            {
+                // вывод сообщения из меню текстом 
+                foreach (var item in MenuOfNearBar)
+                {
+                    if (item.Subtitle_2 == NamOfTitle) MenuItems += item.Dish + "  -  " + item.Price + " руб" + "\n";
+                }
+                Bot.SendTextMessageAsync(ChatId, MenuItems);
+            }
+
+        }
 
 
 

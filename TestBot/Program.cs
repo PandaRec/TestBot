@@ -61,6 +61,10 @@ namespace TestBot
                 Console.WriteLine("ttt");
                 NearBars.CallBackQRecived(sender,e);
             }
+            else if (NearBars.CallBackData.Contains(e.CallbackQuery.Data))
+            {
+                NearBars.GetMenuItems(e.CallbackQuery.Data, e.CallbackQuery.Message.Chat.Id);
+            }
         }
 
         private static async void BotOnMessageRecived(object sender, Telegram.Bot.Args.MessageEventArgs e)
