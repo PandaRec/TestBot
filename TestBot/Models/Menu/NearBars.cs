@@ -3,6 +3,7 @@ using Telegram.Bot;
 using System;
 using Telegram.Bot.Args;
 using System.Collections.Generic;
+using Telegram.Bot.Types.Enums;
 
 namespace TestBot.Models.Menu
 {
@@ -26,6 +27,7 @@ namespace TestBot.Models.Menu
         private static Dictionary<long, int> counter = new Dictionary<long, int>();
 
         private static Telegram.Bot.Types.Message answ = null;
+        private static Telegram.Bot.Types.Message answ2 = null;
 
         public static List<string> CallBackData { get; private set; } = new List<string>();
 
@@ -85,7 +87,7 @@ namespace TestBot.Models.Menu
         /// </summary>
         /// <param name="barname"></param>
         /// <returns></returns>
-        public static InlineKeyboardMarkup SetKeyboard(string barname)
+      /*  public static InlineKeyboardMarkup SetKeyboard(string barname)
         {
             int temp_likes=0;
             int temp_dislikes=0;
@@ -109,6 +111,7 @@ namespace TestBot.Models.Menu
 
             return Temp;
         }
+        */
 
             public static InlineKeyboardMarkup SetKeyboard(long ChatId, bool title,bool subtitle,bool subtitle_2,string nameoftitle)
         {
@@ -249,21 +252,38 @@ namespace TestBot.Models.Menu
             }
             return new InlineKeyboardMarkup(rowList);
         }
-        public static InlineKeyboardMarkup SetKeyboard(bool hasmenu, bool hasphotos, bool first)
+        public static InlineKeyboardMarkup SetKeyboard(bool hasmenu, bool hasphotos, bool first,string barname)
         {
+            int temp_likes = 0;
+            int temp_dislikes = 0;
+            foreach (var item in Program.UserRate)
+            {
+                if (item.BarName == barname)
+                {
+                    temp_likes = item.Likes.Count;
+                    temp_dislikes = item.Dislikes.Count;
+                    break;
+                }
+            }
+
             if (hasmenu == true && hasphotos == true && first == true)
             {
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
-                InlineKeyboardButton.WithCallbackData("Дальше","Next"),
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
             },
             new InlineKeyboardButton[]
             {
                 InlineKeyboardButton.WithCallbackData("Фото","Photos"),
-                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
-
+                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
                 return Temp;
@@ -274,11 +294,17 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
             },
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+            },
+            new InlineKeyboardButton[]
+            {
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
@@ -291,9 +317,18 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
-                InlineKeyboardButton.WithCallbackData("Дальше","Next")
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
 
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
 
         });
@@ -305,7 +340,16 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
+            },
+            new InlineKeyboardButton[]
+            {
                 InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+            },
+            new InlineKeyboardButton[]
+            {
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
@@ -318,14 +362,23 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Назад","Back"),
-                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
-                InlineKeyboardButton.WithCallbackData("Дальше","Next"),
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
             },
             new InlineKeyboardButton[]
             {
                 InlineKeyboardButton.WithCallbackData("Фото","Photos"),
-                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Назад","Back"),
+                InlineKeyboardButton.WithCallbackData("Дальше","Next")
+
+
             }
         });
                 return Temp;
@@ -334,6 +387,12 @@ namespace TestBot.Models.Menu
             else if (hasmenu == false && hasphotos == true && first == false)
             {
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
+            },
             new InlineKeyboardButton[]
             {
                 InlineKeyboardButton.WithCallbackData("Фото","Photos"),
@@ -354,14 +413,19 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Назад","Back"),
-                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
-                InlineKeyboardButton.WithCallbackData("Дальше","Next")
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
 
             },
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+                InlineKeyboardButton.WithCallbackData("Меню","Menu"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Назад","Back"),
+                InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
 
         });
@@ -373,12 +437,18 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Назад","Back"),
-                InlineKeyboardButton.WithCallbackData("Дальше","Next")
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
+
             },
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route")
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Назад","Back"),
+                InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
 
@@ -432,11 +502,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -445,16 +515,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "500m":
@@ -468,11 +538,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -481,16 +551,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                       // answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "1km":
@@ -504,11 +574,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -517,16 +587,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "2km":
@@ -540,11 +610,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -553,16 +623,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "3km":
@@ -576,11 +646,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                if(answ!=null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -589,16 +664,20 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "5km":
@@ -612,11 +691,15 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -625,16 +708,20 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                if (answ != null)
+                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "8km":
@@ -648,11 +735,11 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
 
@@ -661,16 +748,16 @@ namespace TestBot.Models.Menu
                         {
                             if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
                             {
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true));
+                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                             else
                             {
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true));
+                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
 
                             }
                         }
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
 
@@ -704,13 +791,13 @@ namespace TestBot.Models.Menu
                             {
                                 if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, false));
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
                             }
                             else
                             {
                                 if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, false, false));
+                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, false, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                             }
 
@@ -721,19 +808,19 @@ namespace TestBot.Models.Menu
                             {
                                 if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, false));
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                             }
                             else
                             {
                                 if (answ != null)
                                     await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, false, false));
+                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, false, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                             }
                         }
                         //CallBackData.Clear();
-                        await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                        //answ2 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                     }
                     else
@@ -748,47 +835,36 @@ namespace TestBot.Models.Menu
                     {
                         Console.WriteLine(counter[e.CallbackQuery.Message.Chat.Id] + "   -   " + e.CallbackQuery.Message.Chat.Id);
                         counter[e.CallbackQuery.Message.Chat.Id] -= 1;
+                        bool hasphotos = false;
 
-                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu == true)
+                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
+                            hasphotos = true;
+
+                        if (counter[e.CallbackQuery.Message.Chat.Id] == 0)
                         {
-                            if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, false));
-
-                            }
+                            if (answ != null)
+                                await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                            if(hasphotos==true)
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu,hasphotos, true, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
                             else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(true, false, false));
-
-                            }
+                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu,hasphotos, true, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                         }
                         else
                         {
-                            if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, false));
-
-                            }
+                            if (answ != null)
+                                await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                            if (hasphotos == true)
+                                answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
                             else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(false, false, false));
-
-                            }
+                                answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, false, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                         }
                         //CallBackData.Clear();
-                        await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                       //answ2 =  await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                     }
+                    Console.WriteLine("------> "+(counter[e.CallbackQuery.Message.Chat.Id]));
                     break;
                 case "Photos":
                     Telegram.Bot.Types.InputMediaPhoto[] f;
@@ -904,9 +980,10 @@ namespace TestBot.Models.Menu
                 // вывод сообщения из меню текстом 
                 foreach (var item in MenuOfNearBar)
                 {
-                    if (item.Subtitle_2 == NamOfTitle) MenuItems += item.Dish + "  -  " + item.Price + " руб" + "\n";
+                    if (item.Subtitle_2 == NamOfTitle) MenuItems += item.Dish + "  -  " + "<b><i>"+item.Price + " руб" +"</i></b>"+ "\n"+"--------"+"\n";
                 }
-                Bot.SendTextMessageAsync(ChatId, MenuItems);
+                
+                Bot.SendTextMessageAsync(ChatId, MenuItems,ParseMode.Html);
             }
 
         }
@@ -918,6 +995,8 @@ namespace TestBot.Models.Menu
             {
                 if (item.BarName == NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName)
                 {
+                    Console.WriteLine("++++++++>" + counter[e.CallbackQuery.Message.Chat.Id]);
+
                     if (item.Likes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id))
                     {
                         await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже голосовали", false);
@@ -928,13 +1007,39 @@ namespace TestBot.Models.Menu
                     {
                         item.Dislikes.Remove(e.CallbackQuery.Message.Chat.Id);
                         item.Likes.Add(e.CallbackQuery.Message.Chat.Id);
-                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        bool hasphotos = false;
+                        bool first = false;
+                        
+                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
+                            hasphotos = true;
+                        if (counter[e.CallbackQuery.Message.Chat.Id] == 0) first = true;
+
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        if (hasphotos == false)
+                            answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                        else
+                           answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+
                         break;
                     }
                     else if(!item.Likes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id))
                     {
                         item.Likes.Add(e.CallbackQuery.Message.Chat.Id);
-                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        bool hasphotos = false;
+                        bool first = false;
+
+                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
+                            hasphotos = true;
+                        if (counter[e.CallbackQuery.Message.Chat.Id] == 0) first = true;
+
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        if(hasphotos==false)
+                        answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                        else
+                         answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+
                         break;
                     }
 
@@ -951,6 +1056,8 @@ namespace TestBot.Models.Menu
             {
                 if (item.BarName == NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName)
                 {
+                    Console.WriteLine("++++++++>" + counter[e.CallbackQuery.Message.Chat.Id]);
+
                     if (item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Likes.Contains(e.CallbackQuery.Message.Chat.Id))
                     {
                         await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже голосовали", false);
@@ -961,13 +1068,37 @@ namespace TestBot.Models.Menu
                     {
                         item.Likes.Remove(e.CallbackQuery.Message.Chat.Id);
                         item.Dislikes.Add(e.CallbackQuery.Message.Chat.Id);
-                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        bool hasphotos = false;
+                        bool first = false;
+
+                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
+                            hasphotos = true;
+                        if (counter[e.CallbackQuery.Message.Chat.Id] == 0) first = true;
+
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        if (hasphotos == false)
+                            answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                        else
+                            answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
                         break;
                     }
                     else if (!item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Likes.Contains(e.CallbackQuery.Message.Chat.Id))
                     {
                         item.Dislikes.Add(e.CallbackQuery.Message.Chat.Id);
-                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        bool hasphotos = false;
+                        bool first = false;
+
+                        if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count > 0)
+                            hasphotos = true;
+                        if (counter[e.CallbackQuery.Message.Chat.Id] == 0) first = true;
+
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        if (hasphotos == false)
+                            answ = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
+                        else
+                            answ = await Bot.SendPhotoAsync(e.CallbackQuery.Message.Chat.Id, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[0], SetCaption(e.CallbackQuery.Message.Chat.Id), replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].HasMenu, hasphotos, first, NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
                         break;
                     }
 
