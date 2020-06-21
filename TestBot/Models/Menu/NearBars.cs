@@ -29,7 +29,11 @@ namespace TestBot.Models.Menu
 
         public static List<string> CallBackData { get; private set; } = new List<string>();
 
+        //public static Dictionary<long, bool> Like { get; private set; } = new Dictionary<long, bool>();
 
+        //public static Dictionary<long, bool> Dislike { get; private set; } = new Dictionary<long, bool>();
+        //public static int LikeValue { get; private set; }
+        //public static int DislikeValue { get; private set; }
         public static ReplyKeyboardMarkup ReplyKeyboardGeo { get; } = new ReplyKeyboardMarkup(new[] {
             new[]{
             new KeyboardButton("Показать где я сейчас") { RequestLocation=true}
@@ -70,11 +74,43 @@ namespace TestBot.Models.Menu
         }
         public static bool ContainsData(Telegram.Bot.Types.CallbackQuery callback)
         {
-            if (callback.Data.Equals("Menu") || callback.Data.Equals("Next") || callback.Data.Equals("Photos") || callback.Data.Equals("Back")) return true;
+            if (callback.Data.Equals("Menu") || callback.Data.Equals("Next") || callback.Data.Equals("Photos") 
+                || callback.Data.Equals("Back") || callback.Data.Equals("Route") || callback.Data.Equals("like") 
+                || callback.Data.Equals("dislike") || callback.Data.Equals("like") || callback.Data.Equals("dilike"))
+                return true;
             else return false;
         }
+        /// <summary>
+        /// Устанвка inline клавиатуры с лайками и дизлайками
+        /// </summary>
+        /// <param name="barname"></param>
+        /// <returns></returns>
+        public static InlineKeyboardMarkup SetKeyboard(string barname)
+        {
+            int temp_likes=0;
+            int temp_dislikes=0;
+            foreach (var item in Program.UserRate)
+            {
+                if (item.BarName == barname)
+                {
+                    temp_likes = item.Likes.Count;
+                    temp_dislikes = item.Dislikes.Count;
+                    break;
+                }
+            }
+            InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("\U00002764"+temp_likes,"like"),
+                InlineKeyboardButton.WithCallbackData("\U0001F494"+temp_dislikes,"dislike")
 
-        public static InlineKeyboardMarkup SetKeyboard(long ChatId, bool title,bool subtitle,bool subtitle_2,string nameoftitle)
+            }
+        });
+
+            return Temp;
+        }
+
+            public static InlineKeyboardMarkup SetKeyboard(long ChatId, bool title,bool subtitle,bool subtitle_2,string nameoftitle)
         {
             List<List<InlineKeyboardButton>> rowList = new List<List<InlineKeyboardButton>>();
 
@@ -225,7 +261,9 @@ namespace TestBot.Models.Menu
             },
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Фотогаллерея","Photos"),
+                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
+
             }
         });
                 return Temp;
@@ -236,10 +274,11 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Фотогаллерея","Photos"),
+                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
             },
             new InlineKeyboardButton[]
             {
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
@@ -266,6 +305,7 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
             }
         });
@@ -284,7 +324,8 @@ namespace TestBot.Models.Menu
             },
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Фотогаллерея","Photos"),
+                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
             }
         });
                 return Temp;
@@ -295,7 +336,8 @@ namespace TestBot.Models.Menu
                 InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
             new InlineKeyboardButton[]
             {
-                InlineKeyboardButton.WithCallbackData("Фотогаллерея","Photos"),
+                InlineKeyboardButton.WithCallbackData("Фото","Photos"),
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
             },
             new InlineKeyboardButton[]
             {
@@ -316,6 +358,10 @@ namespace TestBot.Models.Menu
                 InlineKeyboardButton.WithCallbackData("Меню","Menu"),
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
 
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
             }
 
         });
@@ -329,6 +375,10 @@ namespace TestBot.Models.Menu
             {
                 InlineKeyboardButton.WithCallbackData("Назад","Back"),
                 InlineKeyboardButton.WithCallbackData("Дальше","Next")
+            },
+            new InlineKeyboardButton[]
+            {
+                InlineKeyboardButton.WithCallbackData("Маршрут","Route"),
             }
         });
 
@@ -366,6 +416,8 @@ namespace TestBot.Models.Menu
                 counter[message.Chat.Id] = 0;
             }
 
+            
+
             switch (message.Text)
             {
 
@@ -402,6 +454,7 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "500m":
@@ -437,6 +490,7 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "1km":
@@ -472,6 +526,7 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "2km":
@@ -507,6 +562,7 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "3km":
@@ -542,8 +598,8 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
-                    //тут вывод того, что удалось найти в FindNears
                     break;
                 case "5km":
                     CallBackData.Clear();
@@ -578,6 +634,7 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
                 case "8km":
@@ -613,8 +670,10 @@ namespace TestBot.Models.Menu
 
                             }
                         }
+                        await Bot.SendTextMessageAsync(message.Chat.Id, "Оценка от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[message.Chat.Id]].BarName));
                     }
                     break;
+
                 default:
                     break;
 
@@ -674,6 +733,7 @@ namespace TestBot.Models.Menu
                             }
                         }
                         //CallBackData.Clear();
+                        await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                     }
                     else
@@ -726,10 +786,45 @@ namespace TestBot.Models.Menu
 
                         }
                         //CallBackData.Clear();
+                        await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Оценка бара от юзеров", replyMarkup: SetKeyboard(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName));
 
                     }
                     break;
                 case "Photos":
+                    Telegram.Bot.Types.InputMediaPhoto[] f;
+
+                    if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count>=10)
+                        f= new Telegram.Bot.Types.InputMediaPhoto [10];
+                    else
+                        f = new Telegram.Bot.Types.InputMediaPhoto[NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count];
+
+                    int temp_counter = 0;
+                        for (int i = 1; i < NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count; i++)
+                        {
+                        if (i % 10 == 0)
+                        {
+                            await Bot.SendMediaGroupAsync(e.CallbackQuery.Message.Chat.Id, f);
+                            if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - i >= 10)
+                                f = new Telegram.Bot.Types.InputMediaPhoto[10];
+                            else f = new Telegram.Bot.Types.InputMediaPhoto[NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - i];
+                            temp_counter = 0;
+                        }
+                        f[temp_counter] = new Telegram.Bot.Types.InputMediaPhoto(new Telegram.Bot.Types.InputMedia(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[i]));
+                        temp_counter++;
+                        }
+                        await Bot.SendMediaGroupAsync(e.CallbackQuery.Message.Chat.Id, f);
+                    
+                    break;
+                case "Route":
+                    await Bot.SendVenueAsync(e.CallbackQuery.Message.Chat.Id, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lat, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lng,"Тыкните на карту", NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName);
+                    break;
+                case "like":
+                    //like
+                    LikeButtonClicked(sender, e);
+                    break;
+                case "dislike":
+                    //dislike
+                    DislikeButtonClicked(sender, e);
                     break;
                 default:
                     break;
@@ -815,6 +910,76 @@ namespace TestBot.Models.Menu
             }
 
         }
+
+        private static async void LikeButtonClicked(object sender, CallbackQueryEventArgs e)
+        {
+            Console.WriteLine("like button cliced");
+            foreach (var item in Program.UserRate)
+            {
+                if (item.BarName == NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName)
+                {
+                    if (item.Likes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже голосовали", false);
+                        break;
+
+                    }
+                    else if (!item.Likes.Contains(e.CallbackQuery.Message.Chat.Id) && item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        item.Dislikes.Remove(e.CallbackQuery.Message.Chat.Id);
+                        item.Likes.Add(e.CallbackQuery.Message.Chat.Id);
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        break;
+                    }
+                    else if(!item.Likes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        item.Likes.Add(e.CallbackQuery.Message.Chat.Id);
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        break;
+                    }
+
+                    
+                }
+            }
+                    
+                    
+        }
+
+        private static async void DislikeButtonClicked(object sender, CallbackQueryEventArgs e)
+        {
+            foreach (var item in Program.UserRate)
+            {
+                if (item.BarName == NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName)
+                {
+                    if (item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Likes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        await Bot.AnswerCallbackQueryAsync(e.CallbackQuery.Id, "Вы уже голосовали", false);
+                        break;
+
+                    }
+                    else if (!item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id) && item.Likes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        item.Likes.Remove(e.CallbackQuery.Message.Chat.Id);
+                        item.Dislikes.Add(e.CallbackQuery.Message.Chat.Id);
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        break;
+                    }
+                    else if (!item.Dislikes.Contains(e.CallbackQuery.Message.Chat.Id) && !item.Likes.Contains(e.CallbackQuery.Message.Chat.Id))
+                    {
+                        item.Dislikes.Add(e.CallbackQuery.Message.Chat.Id);
+                        await Bot.EditMessageTextAsync(e.CallbackQuery.Message.Chat.Id, e.CallbackQuery.Message.MessageId, "Спасибо за оценку", replyMarkup: SetKeyboard(item.BarName));
+                        break;
+                    }
+
+
+                }
+            }
+        }
+
+
+
+
+
 
 
 

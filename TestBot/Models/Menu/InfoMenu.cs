@@ -9,11 +9,11 @@ namespace TestBot.Models.Menu
 {
     class InfoMenu
     {
-        public static Dictionary<long, bool> Like = new Dictionary<long, bool>();
-        public static Dictionary<long, bool> Dislike = new Dictionary<long, bool>();
+       // public static Dictionary<long, bool> Like = new Dictionary<long, bool>();
+        //public static Dictionary<long, bool> Dislike = new Dictionary<long, bool>();
 
-        public static int LikeValue { get; private set; } 
-        public static int DislikeValue { get; private set; }
+        //public static int LikeValue { get; private set; } 
+        //public static int DislikeValue { get; private set; }
 
         //public static bool Like { get; private set; } = false;
         //public static bool Dislike { get; private set; } = false;
@@ -50,7 +50,7 @@ namespace TestBot.Models.Menu
             }
         });
       
-
+        /*
         public static InlineKeyboardMarkup SetKeyboard()
         {
             InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
@@ -65,7 +65,7 @@ namespace TestBot.Models.Menu
             return Temp;
    
         }
-
+        */
 
         public static bool Contains(Telegram.Bot.Types.Message message)
         {
@@ -78,12 +78,13 @@ namespace TestBot.Models.Menu
         {
 
             var message = e.Message;
+            /*
             if (!Like.ContainsKey(message.Chat.Id))
             {
                 Like.Add(message.Chat.Id, false);
                 Dislike.Add(message.Chat.Id, false);
             }
-
+            */
                 switch (message.Text)
             {
                 case "Контакты":
@@ -92,9 +93,11 @@ namespace TestBot.Models.Menu
                 case "Сотрудничество":
                     await Bot.SendTextMessageAsync(message.Chat.Id, "Реклама, покупка и тд - сюда:\nPandarec13@yandex.ru");
                     break;
+                    /*
                 case "Оцени нас":
                     await Bot.SendTextMessageAsync(message.Chat.Id, "Оцени нас", replyMarkup: SetKeyboard());
                     break;
+                    */
                 default:
                     break;
             }
@@ -122,6 +125,7 @@ namespace TestBot.Models.Menu
             
             switch (message)
             {
+                /*
                 case "like":
                     //like
                     Console.WriteLine(LikeValue);
@@ -155,6 +159,7 @@ namespace TestBot.Models.Menu
                     }
 
                     break;
+                    */
 
                 default:
                     break;

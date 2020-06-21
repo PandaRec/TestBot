@@ -24,6 +24,7 @@ namespace TestBot
         //private static Telegram.Bot.Types.Location UserLocation;
         public static List<Models.ModelOfBar> BarInfo { get; private set; } = new List<Models.ModelOfBar>();
         public static List<Models.ModelOfMenuItems> MenuItems { get; private set; } = new List<Models.ModelOfMenuItems>();
+        public static List<Models.ModelOfUserRate> UserRate { get; private set; } = new List<Models.ModelOfUserRate>();
         
         static void Main(string[] args)
         {
@@ -262,6 +263,7 @@ namespace TestBot
             //выборка данных из бд
             Models.ModelOfBar bar = new Models.ModelOfBar();
             Models.ModelOfMenuItems items = new Models.ModelOfMenuItems();
+            Models.ModelOfUserRate rate = new Models.ModelOfUserRate();
 
             string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
             NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
@@ -285,6 +287,7 @@ namespace TestBot
                     bar.HasMenu = Convert.ToBoolean(dbDataRecord["HasMenu"]);
                     string[] temp = dbDataRecord["Pictures"].ToString().Split("|");
                     foreach (var item in temp)
+                        if(item!="")
                         bar.PictureLinks.Add(item);
                     BarInfo.Add(bar);
                 }
@@ -316,6 +319,43 @@ namespace TestBot
             }
             else
                 Console.WriteLine("Запрос не вернул строк в MenuItems");
+            npgSqlDataReader.Close();
+
+
+            npgSqlCommand = new NpgsqlCommand("SELECT * FROM UserRate", npgSqlConnection);
+            npgSqlDataReader = npgSqlCommand.ExecuteReader();
+            if (npgSqlDataReader.HasRows)
+            {
+                Console.WriteLine("Таблица: UserRate");
+                Console.WriteLine("");
+                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
+                {
+                    rate = new Models.ModelOfUserRate();
+                    // Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
+                    rate.BarName = dbDataRecord["BarName"].ToString();
+
+                    string[] temp = dbDataRecord["Likes"].ToString().Split(",");
+                    foreach (var item in temp)
+                    {
+                        if (item != "") 
+                            rate.Likes.Add(Convert.ToInt64(item));
+                    }
+
+                    temp = dbDataRecord["Dislikes"].ToString().Split(",");
+                    foreach (var item in temp)
+                    {
+                        if (item != "")
+                            rate.Dislikes.Add(Convert.ToInt64(item));
+                    }
+
+                    
+                    UserRate.Add(rate);
+                }
+            }
+            else
+                Console.WriteLine("Запрос не вернул строк в MenuItems");
+
+
             Console.WriteLine("чтение завершено");
             npgSqlDataReader.Close();
             npgSqlConnection.Close();
