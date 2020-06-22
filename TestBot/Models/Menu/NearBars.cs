@@ -29,6 +29,12 @@ namespace TestBot.Models.Menu
         private static Telegram.Bot.Types.Message answ = null;
         private static Telegram.Bot.Types.Message answ2 = null;
         private static Telegram.Bot.Types.Message answ3 = null;
+        private static List <Telegram.Bot.Types.Message> answ4 = new List<Telegram.Bot.Types.Message>();
+
+
+        public static bool FlagToWriteRange { get; set; } = false;
+
+        private static int CounterOfPhotos = 0;
 
 
         public static List<string> CallBackData { get; private set; } = new List<string>();
@@ -50,6 +56,13 @@ namespace TestBot.Models.Menu
             }
 
         }, true);
+        public static ReplyKeyboardMarkup ReplyKeyboarBack { get; } = new ReplyKeyboardMarkup(new[] {
+            new[]
+            {
+                new KeyboardButton("Назад")
+            }
+
+        }, true);
         public static ReplyKeyboardMarkup ReplyKeyboard { get; } = new ReplyKeyboardMarkup(new[]
                     {
                         new[]
@@ -61,9 +74,9 @@ namespace TestBot.Models.Menu
                          },
                         new[]
                         {
-                            new KeyboardButton("3km"),
-                            new KeyboardButton("5km"),
-                            new KeyboardButton("8km"),
+                            new KeyboardButton("Свое значение"),
+                            //new KeyboardButton("5km"),
+                            //new KeyboardButton("8km"),
                             new KeyboardButton("Назад")
                         }
 
@@ -74,23 +87,19 @@ namespace TestBot.Models.Menu
             if (message.Type == Telegram.Bot.Types.Enums.MessageType.Location) return true;
             if (message.Text.Equals("\U0001F43E") || message.Text.Equals("Показать где я сейчас")
             || message.Text.Equals("100m") || message.Text.Equals("500m") || message.Text.Equals("1km")
-            || message.Text.Equals("2km") || message.Text.Equals("3km") || message.Text.Equals("5km")
-            || message.Text.Equals("8km")) return true;
+            || message.Text.Equals("2km") || message.Text.Equals("Свое значение")) return true;
             else return false;
         }
         public static bool ContainsData(Telegram.Bot.Types.CallbackQuery callback)
         {
             if (callback.Data.Equals("Menu") || callback.Data.Equals("Next") || callback.Data.Equals("Photos") 
                 || callback.Data.Equals("Back") || callback.Data.Equals("Route") || callback.Data.Equals("like") 
-                || callback.Data.Equals("dislike") || callback.Data.Equals("like") || callback.Data.Equals("dilike"))
+                || callback.Data.Equals("dislike") || callback.Data.Equals("like") || callback.Data.Equals("dilike") 
+                || callback.Data.Equals("Next_Photos") || callback.Data.Equals("Back_Photos"))
                 return true;
             else return false;
         }
-        /// <summary>
-        /// Устанвка inline клавиатуры с лайками и дизлайками
-        /// </summary>
-        /// <param name="barname"></param>
-        /// <returns></returns>
+        
       /*  public static InlineKeyboardMarkup SetKeyboard(string barname)
         {
             int temp_likes=0;
@@ -116,9 +125,51 @@ namespace TestBot.Models.Menu
             return Temp;
         }
         */
+        /// <summary>
+        /// Утсновка кнопок назад/дальше для фотографий
+        /// </summary>
+        /// <returns></returns>
+        private static InlineKeyboardMarkup SetKeyboard(bool end,bool first)
+        {
+            if (first == true)
+            {
+                InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
+                    new InlineKeyboardButton[]
+                {
+                InlineKeyboardButton.WithCallbackData("Дальше","Next_Photos")
+
+                }
+                });
+                return Temp;
+            }
+            else if (end == true)
+            {
+                InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
+                    new InlineKeyboardButton[]
+                {
+                InlineKeyboardButton.WithCallbackData("Назад","Back_Photos")
+
+                }
+                });
+                return Temp;
+            }
+            else
+            {
+                InlineKeyboardMarkup Temp = new InlineKeyboardMarkup(new[] {
+                    new InlineKeyboardButton[]
+                {
+                InlineKeyboardButton.WithCallbackData("Назад","Back_Photos"),
+                InlineKeyboardButton.WithCallbackData("Дальше","Next_Photos")
+
+                }
+                });
+                return Temp;
+            }
+            
+        }
 
             public static InlineKeyboardMarkup SetKeyboard(long ChatId, bool title,bool subtitle,bool subtitle_2,string nameoftitle)
-        {
+            {
             List<List<InlineKeyboardButton>> rowList = new List<List<InlineKeyboardButton>>();
 
             if (title == true && subtitle == false&& subtitle_2 == false)
@@ -698,7 +749,12 @@ namespace TestBot.Models.Menu
                         }
                     }
                     break;
-                case "3km":
+                case "Свое значение":
+
+                    FlagToWriteRange = true;
+                    await Bot.SendTextMessageAsync(message.Chat.Id,"Введите дистанцию в км:", replyMarkup: ReplyKeyboarBack);
+
+                    /*
                     CallBackData.Clear();
                     NearBarsList = FindNears(3000);
 
@@ -748,6 +804,7 @@ namespace TestBot.Models.Menu
                             }
                         }
                     }
+                    */
                     break;
                 case "5km":
                     CallBackData.Clear();
@@ -863,6 +920,20 @@ namespace TestBot.Models.Menu
             switch (callback)
             {
                 case "Menu":
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    foreach (var item in MenuItemsToDelete)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    answ4.Clear();
+                    MenuItemsToDelete.Clear();
+                    answ2 = null;
+                    answ3 = null;
                     Telegram.Bot.Types.Message temp = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Категории меню:", replyMarkup: SetKeyboard(e.CallbackQuery.Message.Chat.Id));
                     MenuItemsToDelete.Add(temp);
                     break;
@@ -872,9 +943,16 @@ namespace TestBot.Models.Menu
                     {
                         await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
                     }
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    answ4.Clear();
                     MenuItemsToDelete.Clear();
                     answ2 = null;
                     answ3 = null;
+                    CounterOfPhotos = 0;
                     Console.WriteLine("Next");
                     if (NearBarsList.Count > counter[e.CallbackQuery.Message.Chat.Id] + 1)
                     {
@@ -922,7 +1000,8 @@ namespace TestBot.Models.Menu
                     }
                     else
                     {
-                        await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Бары закончились");
+                        var j = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Бары закончились");
+                        MenuItemsToDelete.Add(j);
                     }
 
                     break;
@@ -932,9 +1011,16 @@ namespace TestBot.Models.Menu
                     {
                         await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
                     }
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
                     answ2 = null;
                     answ3 = null;
+                    answ4.Clear();
                     MenuItemsToDelete.Clear();
+                    CounterOfPhotos = 0;
                     if (counter[e.CallbackQuery.Message.Chat.Id] > 0)
                     {
                         Console.WriteLine(counter[e.CallbackQuery.Message.Chat.Id] + "   -   " + e.CallbackQuery.Message.Chat.Id);
@@ -971,39 +1057,59 @@ namespace TestBot.Models.Menu
                     Console.WriteLine("------> "+(counter[e.CallbackQuery.Message.Chat.Id]));
                     break;
                 case "Photos":
-                    Telegram.Bot.Types.InputMediaPhoto[] f;
+                    CounterOfPhotos = 0;
+                    foreach (var item in MenuItemsToDelete)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
 
-                    if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count>=10)
-                        f= new Telegram.Bot.Types.InputMediaPhoto [10];
-                    else
-                        f = new Telegram.Bot.Types.InputMediaPhoto[NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count];
-
-                    int temp_counter = 0;
-                        for (int i = 1; i < NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count; i++)
-                        {
-                        if (i % 10 == 0)
-                        {
-                            await Bot.SendMediaGroupAsync(e.CallbackQuery.Message.Chat.Id, f);
-                            if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - i >= 10)
-                                f = new Telegram.Bot.Types.InputMediaPhoto[10];
-                            else f = new Telegram.Bot.Types.InputMediaPhoto[NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - i];
-                            temp_counter = 0;
-                        }
-                        f[temp_counter] = new Telegram.Bot.Types.InputMediaPhoto(new Telegram.Bot.Types.InputMedia(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[i]));
-                        temp_counter++;
-                        }
-                        await Bot.SendMediaGroupAsync(e.CallbackQuery.Message.Chat.Id, f);
-                    
+                    }
+                    answ2 = null;
+                    answ3 = null;
+                    MenuItemsToDelete.Clear();
+                    PhotoButtonClicked(sender, e);
+                    break;
+                case "Next_Photos":
+                    PhotoButtonClicked(sender,e);
+                    break;
+                case "Back_Photos":
+                    BackPhotosButtonClicked(sender,e);
                     break;
                 case "Route":
-                    await Bot.SendVenueAsync(e.CallbackQuery.Message.Chat.Id, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lat, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lng,"Тыкните на карту", NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName);
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    foreach (var item in MenuItemsToDelete)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    answ4.Clear();
+                    answ2 = null;
+                    answ3 = null;
+                    MenuItemsToDelete.Clear();
+                    Telegram.Bot.Types.Message t = await Bot.SendVenueAsync(e.CallbackQuery.Message.Chat.Id, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lat, (float)NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].Lng,"Тыкните на карту", NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].BarName);
+                    MenuItemsToDelete.Add(t);
                     break;
                 case "like":
                     //like
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    answ4.Clear();
                     LikeButtonClicked(sender, e);
                     break;
                 case "dislike":
                     //dislike
+                    foreach (var item in answ4)
+                    {
+                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+
+                    }
+                    answ4.Clear();
                     DislikeButtonClicked(sender, e);
                     break;
                 default:
@@ -1012,7 +1118,7 @@ namespace TestBot.Models.Menu
         }
 
 
-        private static List<ModelOfBar> FindNears(int range)//float latitude,float longitude,
+        private static List<ModelOfBar> FindNears(double range)//float latitude,float longitude,
         {
             List<ModelOfBar> bars = new List<ModelOfBar>();
             foreach (var item in Program.BarInfo)
@@ -1033,7 +1139,7 @@ namespace TestBot.Models.Menu
                 double dist = (6378137 * Math.Acos(Math.Cos(lat1) * Math.Cos(lat2) * Math.Cos(lng1 - lng2) + Math.Sin(lat1) * Math.Sin(lat2)));
                 Console.WriteLine(Math.Round(dist));
 
-                if (Math.Round(dist) < range) bars.Add(item);
+                if (Math.Round(dist) < range*1000) bars.Add(item);
 
 
 
@@ -1096,6 +1202,7 @@ namespace TestBot.Models.Menu
 
                 answ2 = await Bot.SendTextMessageAsync(ChatId,"Выберите категорию",replyMarkup: SetKeyboard(ChatId, title, subtitle, subtitle_2,NamOfTitle));
                 MenuItemsToDelete.Add(answ2);
+                //answ2 = null; // ТУТ
             }
             else if (subtitle_2 == true)
             {
@@ -1119,6 +1226,7 @@ namespace TestBot.Models.Menu
 
                 answ3 = await Bot.SendTextMessageAsync(ChatId, MenuItems,ParseMode.Html);
                 MenuItemsToDelete.Add(answ3);
+                //answ3 = null;
             }
 
         }
@@ -1242,8 +1350,180 @@ namespace TestBot.Models.Menu
             }
         }
 
+        private static async void PhotoButtonClicked(object sender, CallbackQueryEventArgs e)
+        {
+            Telegram.Bot.Types.InputMediaPhoto[] f;
+
+            Console.WriteLine("кол во фоток в этом баре - "+ NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count);
+            if (CounterOfPhotos >= NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count)
+            {
+                return;
+            }
+
+            if (answ4.Count!=0)
+            {
+                foreach (var item in answ4)
+                {
+                    await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+                }
+                answ4.Clear();
+
+            }
+            if (NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - CounterOfPhotos >= 10)
+            {
+                f = new Telegram.Bot.Types.InputMediaPhoto[10];
 
 
+            }
+            else
+                f = new Telegram.Bot.Types.InputMediaPhoto[NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count - CounterOfPhotos];
+           
+            int temp_counter = 0;
+
+            for (int i = CounterOfPhotos; i < f.Length+CounterOfPhotos; i++)
+            {
+                f[temp_counter] = new Telegram.Bot.Types.InputMediaPhoto(new Telegram.Bot.Types.InputMedia(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[i]));
+                temp_counter++;
+            }
+                var k = await Bot.SendMediaGroupAsync(f, e.CallbackQuery.Message.Chat.Id);
+            foreach (var item in k)
+            {
+                answ4.Add(item);
+            }
+
+            if (CounterOfPhotos == 0)
+            {
+                Telegram.Bot.Types.Message answ_0 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Дальше", replyMarkup: SetKeyboard(false, true));
+                answ4.Add(answ_0);
+            }
+            else if (CounterOfPhotos + temp_counter == NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks.Count)
+            {
+                Telegram.Bot.Types.Message answ_0 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Назад", replyMarkup: SetKeyboard(true, false));
+                answ4.Add(answ_0);
+
+            }
+            else
+            {
+                Telegram.Bot.Types.Message answ_0 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Назад/Дальше", replyMarkup: SetKeyboard(false, false));
+                answ4.Add(answ_0);
+
+            }
+            CounterOfPhotos += f.Length;
+        }
+
+        private static async void BackPhotosButtonClicked(object sender, CallbackQueryEventArgs e)
+        {
+            Telegram.Bot.Types.InputMediaPhoto[] f;
+            int temp = 0;
+
+            if (CounterOfPhotos < 0)
+            {
+                return;
+            }
+            if (answ4.Count != 0)
+            {
+                foreach (var item in answ4)
+                {
+                    await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+                }
+                answ4.Clear();
+
+            }
+
+            if (CounterOfPhotos % 10 != 0)
+            {
+                f = new Telegram.Bot.Types.InputMediaPhoto[10];
+                temp = CounterOfPhotos%10;
+            }
+            else
+            {
+                f = new Telegram.Bot.Types.InputMediaPhoto[10];
+                temp = 10;
+            }
+
+            int temp_counter = 0;
+
+            for (int i = CounterOfPhotos - f.Length-temp; i <CounterOfPhotos-temp; i++)
+            {
+                f[temp_counter] = new Telegram.Bot.Types.InputMediaPhoto(new Telegram.Bot.Types.InputMedia(NearBarsList[counter[e.CallbackQuery.Message.Chat.Id]].PictureLinks[i]));
+                temp_counter++;
+            }
+            var k = await Bot.SendMediaGroupAsync(f, e.CallbackQuery.Message.Chat.Id);
+
+            foreach (var item in k)
+            {
+                answ4.Add(item);
+            }
+
+            if (CounterOfPhotos - temp_counter - temp == 0)
+            {
+                Telegram.Bot.Types.Message answ_0 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Дальше", replyMarkup: SetKeyboard(false, true));
+                answ4.Add(answ_0);
+            }
+            else
+            {
+                Telegram.Bot.Types.Message answ_0 = await Bot.SendTextMessageAsync(e.CallbackQuery.Message.Chat.Id, "Назад/Дальше", replyMarkup: SetKeyboard(false, false));
+                answ4.Add(answ_0);
+
+            }
+            CounterOfPhotos -= f.Length;
+
+        }
+
+
+        public static async void UsersRangeRecived(object sender, MessageEventArgs e,double UserRange)
+        {
+            await Bot.SendTextMessageAsync(e.Message.Chat.Id,"вот что удалось найти",replyMarkup:ReplyKeyboard);
+            CallBackData.Clear();
+            NearBarsList = FindNears(UserRange);
+
+            foreach (var item in MenuItemsToDelete)
+            {
+                await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
+            }
+            MenuItemsToDelete.Clear();
+
+            if (NearBarsList.Count == 0)
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "На расстоянии 5km ничего не найдено");
+            else
+            {
+                if (NearBarsList[counter[e.Message.Chat.Id]].HasMenu == true)
+                {
+                    if (NearBarsList[counter[e.Message.Chat.Id]].PictureLinks.Count > 0)
+                    {
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        answ = await Bot.SendPhotoAsync(e.Message.Chat.Id, NearBarsList[counter[e.Message.Chat.Id]].PictureLinks[0], SetCaption(e.Message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[e.Message.Chat.Id]].BarName));
+                    }
+                    else
+                    {
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        answ = await Bot.SendTextMessageAsync(e.Message.Chat.Id, SetCaption(e.Message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[e.Message.Chat.Id]].BarName));
+
+                    }
+
+                }
+                else
+                {
+                    if (NearBarsList[counter[e.Message.Chat.Id]].PictureLinks.Count > 0)
+                    {
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        answ = await Bot.SendPhotoAsync(e.Message.Chat.Id, NearBarsList[counter[e.Message.Chat.Id]].PictureLinks[0], SetCaption(e.Message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[e.Message.Chat.Id]].BarName));
+
+                    }
+                    else
+                    {
+                        if (answ != null)
+                            await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
+                        answ = await Bot.SendTextMessageAsync(e.Message.Chat.Id, SetCaption(e.Message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[e.Message.Chat.Id]].BarName));
+
+                    }
+                }
+            }
+            FlagToWriteRange = false;
+        }
 
 
 

@@ -133,6 +133,7 @@ namespace TestBot
             else if (message.Text.Equals("Назад"))
             {
                 await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
+                NearBars.FlagToWriteRange = false;
 
             }
 
@@ -170,6 +171,19 @@ namespace TestBot
                 else
                 {
                     await bot.SendTextMessageAsync(message.Chat.Id, "Тут будет клава с критериями");
+                }
+            }
+            else if (NearBars.FlagToWriteRange == true)
+            {
+                double range;
+                bool res = Double.TryParse(message.Text, out range);
+                if (res == true)
+                {
+                    NearBars.UsersRangeRecived(sender, e, range);
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat.Id,"вы ввели не кореектное число\nили вообще не число");
                 }
             }
 
