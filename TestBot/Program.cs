@@ -117,8 +117,12 @@ namespace TestBot
             {
                 if (message.Text.Equals("\U0001F50D"))
                 {
-                    await bot.SendTextMessageAsync(message.Chat.Id, SearchMenu.Menu, replyMarkup: SearchMenu.ReplyKeyboard);
-                    SearchMenu.MessageRecived(sender, e);
+                    //await bot.SendTextMessageAsync(message.Chat.Id, SearchMenu.Menu, replyMarkup: SearchMenu.ReplyKeyboard);
+                    //SearchMenu.MessageRecived(sender, e);
+                    SearchMenu.FlagToWriteName = true;
+                    //SearchMenu.UserNameRecived(sender, e);
+                    await bot.SendTextMessageAsync(message.Chat.Id,"Введите название бара",replyMarkup: NearBars.ReplyKeyboarBack);
+                    
                 }
                 
             }
@@ -134,6 +138,8 @@ namespace TestBot
             {
                 await bot.SendTextMessageAsync(message.Chat.Id, StartMenu.menu, replyMarkup: StartMenu.ReplyKeyboard);
                 NearBars.FlagToWriteRange = false;
+                SearchMenu.FlagToWriteName = false;
+
 
             }
 
@@ -186,10 +192,16 @@ namespace TestBot
                     await bot.SendTextMessageAsync(message.Chat.Id,"вы ввели не кореектное число\nили вообще не число");
                 }
             }
+            
+            else if (SearchMenu.FlagToWriteName == true)
+            {
+                SearchMenu.UserNameRecived(sender, e);
+            }
+            
 
             else
             {
-                SearchMenu.MessageRecived(sender, e);
+                //SearchMenu.MessageRecived(sender, e);
 
             }
 

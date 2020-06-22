@@ -20,13 +20,13 @@ namespace TestBot.Models.Menu
         private static float LatitudePos;
         private static float LongitudePos;
 
-        private static List<ModelOfBar> NearBarsList = new List<ModelOfBar>();
+        public static List<ModelOfBar> NearBarsList { get; set; } = new List<ModelOfBar>();
 
-        private static List<ModelOfMenuItems> MenuOfNearBar = new List<ModelOfMenuItems>();
+        public static List<ModelOfMenuItems> MenuOfNearBar { get; set; } = new List<ModelOfMenuItems>();
 
-        private static Dictionary<long, int> counter = new Dictionary<long, int>();
+        public static Dictionary<long, int> counter { get; set; } = new Dictionary<long, int>();
 
-        private static Telegram.Bot.Types.Message answ = null;
+        public static Telegram.Bot.Types.Message answ = null;
         private static Telegram.Bot.Types.Message answ2 = null;
         private static Telegram.Bot.Types.Message answ3 = null;
         private static List <Telegram.Bot.Types.Message> answ4 = new List<Telegram.Bot.Types.Message>();
@@ -753,160 +753,8 @@ namespace TestBot.Models.Menu
 
                     FlagToWriteRange = true;
                     await Bot.SendTextMessageAsync(message.Chat.Id,"Введите дистанцию в км:", replyMarkup: ReplyKeyboarBack);
-
-                    /*
-                    CallBackData.Clear();
-                    NearBarsList = FindNears(3000);
-
-                    foreach (var item in MenuItemsToDelete)
-                    {
-                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
-                    }
-                    MenuItemsToDelete.Clear();
-
-                    if (NearBarsList.Count == 0)
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 3km ничего не найдено");
-                    else
-                    {
-                        if (NearBarsList[counter[message.Chat.Id]].HasMenu == true)
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if(answ!=null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-
-                        }
-                        else
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                        }
-                    }
-                    */
                     break;
-                case "5km":
-                    CallBackData.Clear();
-                    NearBarsList = FindNears(5000);
-
-                    foreach (var item in MenuItemsToDelete)
-                    {
-                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
-                    }
-                    MenuItemsToDelete.Clear();
-
-                    if (NearBarsList.Count == 0)
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 5km ничего не найдено");
-                    else
-                    {
-                        if (NearBarsList[counter[message.Chat.Id]].HasMenu == true)
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-
-                        }
-                        else
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                        }
-                    }
-                    break;
-                case "8km":
-                    CallBackData.Clear();
-
-                    foreach (var item in MenuItemsToDelete)
-                    {
-                        await Bot.DeleteMessageAsync(item.Chat.Id, item.MessageId);
-                    }
-                    MenuItemsToDelete.Clear();
-
-                    NearBarsList = FindNears(8000);
-                    if (NearBarsList.Count == 0)
-                        await Bot.SendTextMessageAsync(message.Chat.Id, "На расстоянии 8km ничего не найдено");
-                    else
-                    {
-                        if (NearBarsList[counter[message.Chat.Id]].HasMenu == true)
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(true, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-
-                        }
-                        else
-                        {
-                            if (NearBarsList[counter[message.Chat.Id]].PictureLinks.Count > 0)
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendPhotoAsync(message.Chat.Id, NearBarsList[counter[message.Chat.Id]].PictureLinks[0], SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, true, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                            else
-                            {
-                                if (answ != null)
-                                    await Bot.DeleteMessageAsync(answ.Chat.Id, answ.MessageId);
-                                answ = await Bot.SendTextMessageAsync(message.Chat.Id, SetCaption(message.Chat.Id), replyMarkup: SetKeyboard(false, false, true, NearBarsList[counter[message.Chat.Id]].BarName));
-
-                            }
-                        }
-                    }
-                    break;
-
+                
                 default:
                     break;
 
@@ -1154,7 +1002,7 @@ namespace TestBot.Models.Menu
 
         }
 
-        private static string SetCaption(long ChatId)
+        public static string SetCaption(long ChatId)
         {
             if (NearBarsList[counter[ChatId]].WorkTime.Contains("отсутствует"))
                 return NearBarsList[counter[ChatId]].BarName + "\n"
