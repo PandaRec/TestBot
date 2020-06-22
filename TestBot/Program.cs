@@ -168,16 +168,9 @@ namespace TestBot
 
                 }
             }
-            else if (SearchByConditions.Contains(message))
+            else if (AllBarsWithMenu.Contains(message))
             {
-                if (message.Text.Equals("\U0001F52E"))
-                {
-                    await bot.SendTextMessageAsync(message.Chat.Id, "Тут будет клава с критериями");
-                }
-                else
-                {
-                    await bot.SendTextMessageAsync(message.Chat.Id, "Тут будет клава с критериями");
-                }
+                AllBarsWithMenu.MessageRecived(sender, e);
             }
             else if (NearBars.FlagToWriteRange == true)
             {
