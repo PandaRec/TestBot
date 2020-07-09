@@ -1,232 +1,130 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net;
 using System.IO;
-using HtmlAgilityPack;
-using System.Xml.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
-using System.Net.Http;
+using System.Collections.Generic;
 using Npgsql;
 using System.Data.Common;
-using System.Threading;
-using Npgsql.Logging;
+using System.Text.RegularExpressions;
 
-namespace ParseSites.Site1
+namespace ParseSites
 {
     class Program
     {
+        private static List<BarInfo> BarlistFromSite1 = new List<BarInfo>();
+        private static List<BarInfo> BarlistFromSite2 = new List<BarInfo>();
+        private static List<BarInfo> BarlistFromAllSites = new List<BarInfo>();
+
+
         static void Main(string[] args)
         {
-            string apikey = "5c22c518-ebcf-4750-8524-872e96677344";
-            //string address = "";
-            //List<string> pos = Yandex.Yandex.GetPos(apikey, address);
-
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var enc1251 = Encoding.GetEncoding(1251);
 
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             System.Console.InputEncoding = enc1251;
-            while (true)
-            {
-                List<MenuItems> menuitems_list = new List<MenuItems>();
-                List<BarInfo> barinfo_list = new List<BarInfo>();
 
-                bool EndOfPages = false;
-                int CountOfPages = 1;
-
-                while (EndOfPages == false)
-                {
-                    HtmlDocument doc = new HtmlDocument();
-                    //doc.LoadHtml(getRequest(@"http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p=" + CountOfPages.ToString() + "&fromUrl=/bars"));
-                    doc.LoadHtml(getRequest(@"http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p=" + CountOfPages.ToString() + "&fromUrl=/bars"));
-                    //http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p=' + str(i) + '&fromUrl=/bars
-                    //HtmlNodeCollection l = doc.DocumentNode.SelectNodes("//section[@class = 'catalog__list']");
-                    //Console.WriteLine(doc.DocumentNode.SelectNodes("//div[@class = 'catalog__list']").Count);
-
-                    if (doc.DocumentNode.SelectNodes("//section[@class = 'catalog__list']")[0].InnerText.Contains("По данному запросу заведений не найдено :("))
-                    {
-                        EndOfPages = true;
-                        Console.WriteLine("stop");
-                        continue;
-                    }
-                    else { Console.WriteLine("continue"); }
-
-                    //Console.WriteLine(doc.Encoding.EncodingName);
-                    //Console.WriteLine(doc);
-                    HtmlNodeCollection BarCollection = doc.DocumentNode.SelectNodes("//div[@class = 'place-card__specif']/a");
-
-                    for (int i = 0; i < BarCollection.Count; i++)
-                        if (!BarCollection[i].InnerText.Contains("\r\n"))
-                            BarCollection.Remove(BarCollection[i]);
+            Console.WriteLine(IsSame("музыкальный бар «Мумий Тролль»", "бар Tiki-bar"));
+            Console.WriteLine();
 
 
-                    foreach (var item in BarCollection) //тестовый вывод
-                    {
-                        Console.WriteLine(item.InnerText);
-                        // Console.WriteLine(item.Attributes["href"].Value);
-
-                    }
-                    Console.WriteLine(BarCollection.Count);
 
 
-                    foreach (var item in BarCollection)
-                    {
-                        HtmlDocument doc_2 = new HtmlDocument();
-                        doc_2.LoadHtml(getRequest("http://gdebar.ru" + item.Attributes["href"].Value + "/menu"));
-                        HtmlNodeCollection Menu = doc_2.DocumentNode.SelectNodes("//div[@class = 'menu__dish d-flex align-items-center justify-content-between p-2']");
-                        //if (Menu == null) continue;
-                        if (doc_2.DocumentNode.SelectNodes("//div[@class = 'text-center alert alert-danger h1']")!=null ) continue;
-                        if (Menu == null)
-                        {
-                            BarInfo info = new BarInfo();
-                            
-                            HtmlNodeCollection ff = doc_2.DocumentNode.SelectNodes("//div[@id = 'bar-gallery-main']/div/a");// отсюда берем ссылки на пикчи
-                            if (ff != null)
-                            {
-                                foreach (var item_3 in ff)
-                                {
-                                    info.PictureLinks.Add(item_3.Attributes["href"].Value);
-                                }
-                            }
-                            else info.PictureLinks.Add(null);
-
-                            if (doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.ToLower().Contains("работает"))
-                                info.WorkTime = doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.Replace("\r\n", "").Split("работает ")[1].Replace("   ", "");
-                            else info.WorkTime = "отсутсвует";
-                            if (doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']") != null)
-                                info.Phone = doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']")[0].InnerText.Trim();
-                            else
-                                info.Phone = doc_2.DocumentNode.SelectNodes("//div[@class = 'phone bar__main--info__line d-flex align-items-center justify-content-start mb-4 w-100 flex-nowrap']")[0].InnerText.Trim();
-                            string add = doc_2.DocumentNode.SelectNodes("//span[@class = 'font-weight-light mr-0']")[0].InnerText.Trim();
-                            List<string> poss = Yandex.Yandex.GetPos(apikey, add);
-
-                            info.Lat = Convert.ToDouble(poss[0].Split(" ")[1].Replace(".", ","));       //широта
-                            info.Lng = Convert.ToDouble(poss[0].Split(" ")[0].Replace(".", ","));       //долгота 
-
-                            info.BarName = item.InnerText.Trim();
-                            info.HasMenu = false;
-                            barinfo_list.Add(info);
-
-                            continue;
-
-                        }
-                        BarInfo barinfo = new BarInfo();
-                        MenuItems menuitems = new MenuItems();
-
-                        foreach (var item_2 in Menu)
-                        {
-                            barinfo = new BarInfo();
-                            menuitems = new MenuItems();
-                            HtmlNode subtitle_path_2 = item_2.ParentNode.ParentNode.ParentNode;        //сладкая вода - не обязательная subtitle_2
-                            HtmlNode subtitle_path = subtitle_path_2.ParentNode.ParentNode;       //вода
-                            HtmlNode title_path = subtitle_path.ParentNode.ParentNode; //бар
-                                                                                       //Console.WriteLine(name_path.InnerText);
-                                                                                       //Console.WriteLine(subtitle_path.InnerText);
-                            menuitems.BarName = item.InnerText.Replace("\r", "").Replace("\n", "").Trim();
-                            //if (title_path.Name == "parent") Console.WriteLine("1");
-                            if (title_path.GetAttributeValue("class", "") == "parent")
-                            {
-                                if (title_path.ChildNodes[0].InnerText.Contains(" ("))
-                                    menuitems.Title = title_path.ChildNodes[0].InnerText.Split(" (")[0];       //главная принадлежность
-                                else
-                                    menuitems.Title = title_path.ChildNodes[0].InnerText;
-                                Console.WriteLine(title_path.ChildNodes[0].InnerText);
-                            }
-                            if (subtitle_path.ChildNodes[0].InnerText.Contains(" ("))
-                                menuitems.Subtitle = subtitle_path.ChildNodes[0].InnerText.Split(" (")[0];     //вторичная принадлежность
-                            else
-                                menuitems.Subtitle = subtitle_path.ChildNodes[0].InnerText;
-                            if (subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText.Contains(" ("))
-                                menuitems.Subtitle_2 = subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText.Split(" (")[0];   // если существует, то третичная
-                            else
-                                menuitems.Subtitle_2 = subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText;
-
-                            Console.WriteLine(subtitle_path.ChildNodes[0].InnerText);
-                            Console.WriteLine(subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText);
-
-                            HtmlNodeCollection childrens = item_2.ChildNodes;
-                            //Console.WriteLine(childrens.Count);
-                            menuitems.Dish = childrens[0].ChildNodes[0].InnerText;
-                            menuitems.Price = Convert.ToInt32(childrens[1].InnerText.Split(" ")[0]);
-
-                            Console.WriteLine("блюдо - " + childrens[0].ChildNodes[0].InnerText);
-                            Console.WriteLine("цена - " + childrens[1].InnerText);
-
-
-                            menuitems_list.Add(menuitems);
-
-                            //Console.WriteLine(subtitle_path.ChildNodes[0].InnerText);
-                            //Console.WriteLine(name_path.ChildNodes[0].ChildNodes[0].InnerText);
-
-                            //Console.WriteLine(title_path.ChildNodes[0].InnerText);
-                            //Console.WriteLine(name_path.Name);
-                            //Console.WriteLine(subtitle_path.Name);
-                            //Console.WriteLine(title_path.OriginalName);
-                        }
-
-
-                        Console.WriteLine("-");
-                        //Console.WriteLine(item);
-                        //doc_2.LoadHtml(getRequest("http://gdebar.ru" + item.Attributes["href"].Value));
-                        HtmlNodeCollection f = doc_2.DocumentNode.SelectNodes("//div[@id = 'bar-gallery-main']/div/a");// отсюда берем ссылки на пикчи
-
-                        foreach (var item_3 in f)
-                        {
-                            barinfo.PictureLinks.Add(item_3.Attributes["href"].Value);
-                        }
-                        if (doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.ToLower().Contains("работает"))
-                            barinfo.WorkTime = doc_2.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.Replace("\r\n", "").Split("работает ")[1].Replace("   ", "");
-                        else barinfo.WorkTime = "отсутсвует";
-                        if (doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']") != null)
-                            barinfo.Phone = doc_2.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']")[0].InnerText.Trim();
-                        else
-                            barinfo.Phone = doc_2.DocumentNode.SelectNodes("//div[@class = 'phone bar__main--info__line d-flex align-items-center justify-content-start mb-4 w-100 flex-nowrap']")[0].InnerText.Trim();
-                        string address = doc_2.DocumentNode.SelectNodes("//span[@class = 'font-weight-light mr-0']")[0].InnerText.Trim();
-                        List<string> pos = Yandex.Yandex.GetPos(apikey, address);
-
-                        barinfo.Lat = Convert.ToDouble(pos[0].Split(" ")[1].Replace(".", ","));       //широта
-                        barinfo.Lng = Convert.ToDouble(pos[0].Split(" ")[0].Replace(".", ","));       //долгота 
-
-                        barinfo.BarName = item.InnerText.Trim();
-                        barinfo.HasMenu = true;
-                        barinfo_list.Add(barinfo);
-                    }
-                    Console.WriteLine(CountOfPages);
-                    CountOfPages += 1;
-                    Thread.Sleep(2000);
-
-                }
-                //запись в бд
-                ClearBD("barinfo");
-                ClearBD("menuitems");
-                PastIntoBD(barinfo_list, menuitems_list);
-
-                Console.WriteLine("--------------------------------------------------------------------");
-                Thread.Sleep(50000); //86400000 - это сутки
-            }
-            //Console.WriteLine("END");
-            //выборка данных из тестовой бд
             /*
-            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=TestBD;";
-            NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
-            npgSqlConnection.Open();
-            Console.WriteLine("Соединение с БД открыто");
-            NpgsqlCommand npgSqlCommand = new NpgsqlCommand("SELECT * FROM example", npgSqlConnection);
-            NpgsqlDataReader npgSqlDataReader = npgSqlCommand.ExecuteReader();
-            if (npgSqlDataReader.HasRows)
+            TestMethod();
+            
+            for (int i = 0; i < 214; i++)
             {
-                Console.WriteLine("Таблица: example");
-                Console.WriteLine("id value");
-                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
-                    Console.WriteLine(dbDataRecord["id"] + "   " + dbDataRecord["value"]);
+                BarlistFromSite1.Add(BarlistFromAllSites[i]);
             }
-            else
-                Console.WriteLine("Запрос не вернул строк");
-                */
+            for (int i = 214; i < BarlistFromAllSites.Count; i++)
+            {
+                BarlistFromSite2.Add(BarlistFromAllSites[i]);
+            }
+            for (int i = 0; i < BarlistFromSite1.Count; i++)
+            {
+                for (int j = 0; j < BarlistFromSite2.Count; j++)
+                {
+                    if(BarlistFromSite1[i].Lat==BarlistFromSite2[j].Lat && BarlistFromSite1[i].Lng==BarlistFromSite2[j].Lng)
+                        Console.WriteLine(BarlistFromSite1[i].BarName +"  -  "+BarlistFromSite2[j].BarName);
+                }
+            }
+            */
+            Console.WriteLine();
+            
+            /*
+            int t = 0;
+
+            for (int i = 0; i < BarlistFromAllSites.Count; i++)
+            {
+                for (int j = i+1; j < BarlistFromAllSites.Count; j++)
+                {
+                    if (IsSame(BarlistFromAllSites[i].BarName.ToLower(), BarlistFromAllSites[j].BarName.ToLower()) == true && !BarlistFromAllSites[i].BarName.ToLower().Equals(BarlistFromAllSites[j].BarName.ToLower()))
+                    {
+                        Console.WriteLine(BarlistFromAllSites[i].BarName + "  -  " + BarlistFromAllSites[j].BarName);
+                    }
+                }
+            }
+            Console.WriteLine();
+            */
+            
+            /*
+            foreach (var s1 in BarlistFromAllSites)
+            {
+                foreach (var s2 in BarlistFromAllSites)
+                {
+                    if(s1.Lat == s2.Lat && s1.Lng == s2.Lng && IsSame(s1.BarName.ToLower(), s2.BarName.ToLower()) == true && !s1.BarName.ToLower().Equals(s2.BarName.ToLower()))
+                    {
+                        Console.WriteLine(s1.BarName + "  -  "+s2.BarName);
+                        t++;
+                    }
+                }
+            }
+            */
+
+            // Console.WriteLine();
+
+            
+
+            Site1.Execute.Do(out BarlistFromSite1);
+            Site2.Execute.Do(out BarlistFromSite2);
+            Console.WriteLine(BarlistFromSite1.Count);
+            Console.WriteLine(BarlistFromSite2.Count);
+            ProcessingOfData();
             Console.ReadLine();
+            Console.WriteLine("**************************");
+            PP();
+            Console.WriteLine();
+            foreach (var item in BarlistFromSite1)
+            {
+                if(item.BarName.Contains("мумий тролль"))
+                    Console.WriteLine(item.BarName);
+            }
+            Console.WriteLine();
+            foreach (var item in BarlistFromSite2)
+            {
+                if (item.BarName.Contains("Мумий Тролль"))
+                    Console.WriteLine(item.BarName);
+            }
+          Console.WriteLine(  );
+            foreach (var item in BarlistFromSite1)
+            {
+                if (item.BarName.Contains("Мумий Тролль"))
+                    Console.WriteLine(item.BarName);
+            }
+            foreach (var item in BarlistFromSite2)
+            {
+                if (item.BarName.Contains("Мумий Тролль"))
+                    Console.WriteLine(item.BarName);
+            }
+            Console.WriteLine();
+            for (int i = 0; i < BarlistFromSite2.Count; i++)
+            {
+                if (BarlistFromSite2[i].BarName.Contains("Мумий Тролль"))
+                    Console.WriteLine(i);
+            }
+            Console.WriteLine();
+
 
         }
 
@@ -264,112 +162,412 @@ namespace ParseSites.Site1
             }
         }
 
-        private static void PastIntoBD(List<BarInfo> bar, List<MenuItems> menu)//List<MenuItems> menu,List<BarInfo>bar
-        {
 
-            //запись в BarInfo
-            string sqlquery= "INSERT INTO barinfo (BarName, Latitude, Longitude, Phone, WorkTime, HasMenu, Pictures) VALUES (@BarName, @Latitude, @Longitude, @Phone, @WorkTime, @HasMenu, @Pictures)";
-            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
-            NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
-            npgSqlConnection.Open();
-            
-            //Console.WriteLine("Соединение с БД открыто");
-            NpgsqlCommand npgSqlCommand = new NpgsqlCommand(sqlquery, npgSqlConnection);
-
-            npgSqlCommand.Parameters.Add("BarName",NpgsqlTypes.NpgsqlDbType.Char);
-            npgSqlCommand.Parameters.Add("Latitude", NpgsqlTypes.NpgsqlDbType.Real);
-            npgSqlCommand.Parameters.Add("Longitude", NpgsqlTypes.NpgsqlDbType.Real);
-            npgSqlCommand.Parameters.Add("Phone", NpgsqlTypes.NpgsqlDbType.Varchar);
-            npgSqlCommand.Parameters.Add("WorkTime", NpgsqlTypes.NpgsqlDbType.Varchar);
-            npgSqlCommand.Parameters.Add("HasMenu", NpgsqlTypes.NpgsqlDbType.Boolean);
-            npgSqlCommand.Parameters.Add("Pictures", NpgsqlTypes.NpgsqlDbType.Text);
-
-            foreach (var item in bar)
+        
+       private static void ProcessingOfData()
+       {
+            for (int i = 0; i < BarlistFromSite1.Count; i++)
             {
-                npgSqlCommand.Parameters["BarName"].Value = item.BarName;
-                npgSqlCommand.Parameters["Latitude"].Value = item.Lat;
-                npgSqlCommand.Parameters["Longitude"].Value = item.Lng;
-                npgSqlCommand.Parameters["Phone"].Value = item.Phone;
-                npgSqlCommand.Parameters["WorkTime"].Value = item.WorkTime;
-                npgSqlCommand.Parameters["HasMenu"].Value = item.HasMenu;
-
-                string pictures = "";
-                foreach (var item_2 in item.PictureLinks)
+                for (int j = 0; j < BarlistFromSite2.Count; j++)
                 {
-                    pictures += item_2 + "|";
+                    if (BarlistFromSite1[i].Lat == BarlistFromSite2[j].Lat && BarlistFromSite1[i].Lng == BarlistFromSite2[j].Lng)
+                        Console.WriteLine(BarlistFromSite1[i].BarName + "  -  " + BarlistFromSite2[j].BarName);
                 }
-                npgSqlCommand.Parameters["Pictures"].Value = pictures;
-
-                npgSqlCommand.ExecuteNonQuery();
             }
-
-            //запись в MenuItems
-            sqlquery = "INSERT INTO menuitems (Title, Subtitle, Subtitle_2, Dish, Price, BarName) VALUES (@Title, @Subtitle, @Subtitle_2, @Dish, @Price, @BarName)";
-            npgSqlCommand = new NpgsqlCommand(sqlquery, npgSqlConnection);
-
-            npgSqlCommand.Parameters.Add("Title", NpgsqlTypes.NpgsqlDbType.Char);
-            npgSqlCommand.Parameters.Add("Subtitle", NpgsqlTypes.NpgsqlDbType.Char);
-            npgSqlCommand.Parameters.Add("Subtitle_2", NpgsqlTypes.NpgsqlDbType.Char);
-            npgSqlCommand.Parameters.Add("Dish", NpgsqlTypes.NpgsqlDbType.Varchar);
-            npgSqlCommand.Parameters.Add("Price", NpgsqlTypes.NpgsqlDbType.Integer);
-            npgSqlCommand.Parameters.Add("BarName", NpgsqlTypes.NpgsqlDbType.Text);
-
-            foreach (var item in menu)
-            {
-                if (item.Title == null)
-                    npgSqlCommand.Parameters["Title"].Value = DBNull.Value;
-                else 
-                    npgSqlCommand.Parameters["Title"].Value = item.Title; 
-                if(item.Subtitle==null)
-                    npgSqlCommand.Parameters["Subtitle"].Value = DBNull.Value;
-                else
-                    npgSqlCommand.Parameters["Subtitle"].Value = item.Subtitle;
-                if(item.Subtitle_2==null)
-                    npgSqlCommand.Parameters["Subtitle_2"].Value = DBNull.Value;
-                else 
-                    npgSqlCommand.Parameters["Subtitle_2"].Value = item.Subtitle_2;
-                npgSqlCommand.Parameters["Dish"].Value = item.Dish;
-                npgSqlCommand.Parameters["Price"].Value = item.Price;
-                npgSqlCommand.Parameters["BarName"].Value = item.BarName;
-
-                npgSqlCommand.ExecuteNonQuery();
-            }
-            npgSqlConnection.Close();
 
             /*
-            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=TestBD;";
+            int temp_couneter = 0;
+            foreach (var s1 in BarlistFromSite1)
+                    {
+                        foreach (var s2 in BarlistFromSite2)
+                        {
+                    
+                    if(s1.Lat == s2.Lat && s1.Lng == s2.Lng)
+                    {
+                        Console.WriteLine(s1.BarName + "  -  " + s2.BarName);
+
+                    }
+                    //Console.WriteLine("*************************************************");
+
+                    if (s1.Lat == s2.Lat && s1.Lng == s2.Lng && IsSame(s1.BarName.ToLower(), s2.BarName.ToLower()) == true && !s1.BarName.ToLower().Equals(s2.BarName.ToLower()))
+                    {
+                        //Console.WriteLine("--------------------------------");
+                          //      temp_couneter += 1;
+                            //    Console.WriteLine(temp_couneter);
+                              //  Console.WriteLine(s1.BarName + "  -  "+ s2.BarName);
+                                
+                                //если есть два одинаковых бара
+                                
+                                if (s1.HasMenu == true)
+                                {
+                                    //если у перовго есть меню
+                                    List<string> temp_list = new List<string>();
+                                    string[] temp_array;
+                                    //метро
+                                    foreach (var item in s1.NearSubway)
+                                    {
+                                        //добавляем метро от первого сайт в лист
+                                        temp_list.Add(item);
+                                    }
+                                    foreach (var item in s2.NearSubway)
+                                    {
+                                        // добавляем метро в лист от второго сайта, если там есть то, чего нет от первого сайта
+                                        if (temp_list.IndexOf(item) == -1)
+                                            temp_list.Add(item);
+                                    }
+                                    s1.NearSubway = temp_list.ToArray(); // обновляем данные для первого сайтео метро
+                                    temp_list.Clear();
+                                    // телефон
+                                    temp_array = s1.Phone.Split(", ");
+                                    foreach (var item in temp_array)
+                                    {
+                                        temp_list.Add(item);
+                                    }
+                                    temp_array = s2.Phone.Split(", ");
+                                    //if(temp_list.IndexOf())
+                                }
+                                
+                                
+                                else if (s2.HasMenu == true)
+                                {
+                                    //если у второго есть меню
+                                }
+                                else
+                                {
+                                    // если ни у кого нет меню
+                                }
+                                
+                                
+                            }
+                        }
+                    }
+*/
+        }
+        private static void PP()
+        {
+            for (int i = 0; i < BarlistFromSite1.Count; i++)
+            {
+                for (int j = 0; j < BarlistFromSite2.Count; j++)
+                {
+                    if (BarlistFromSite1[i].Lat == BarlistFromSite2[j].Lat && BarlistFromSite1[i].Lng == BarlistFromSite2[j].Lng && IsSame(BarlistFromSite1[i].BarName,BarlistFromSite2[j].BarName))
+                        Console.WriteLine(BarlistFromSite1[i].BarName + "  -  " + BarlistFromSite2[j].BarName);
+                }
+            }
+        }
+
+        private static void TestMethod()
+        {
+            //выборка данных из бд
+            BarInfo bar = new BarInfo();
+            //Models.ModelOfMenuItems items = new Models.ModelOfMenuItems();
+            //Models.ModelOfUserRate rate = new Models.ModelOfUserRate();
+
+            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
             NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
             npgSqlConnection.Open();
             Console.WriteLine("Соединение с БД открыто");
-            NpgsqlCommand npgSqlCommand = new NpgsqlCommand("SELECT * FROM bar", npgSqlConnection);
+            NpgsqlCommand npgSqlCommand = new NpgsqlCommand("SELECT * FROM barinfo", npgSqlConnection);
             NpgsqlDataReader npgSqlDataReader = npgSqlCommand.ExecuteReader();
             if (npgSqlDataReader.HasRows)
             {
-                Console.WriteLine("Таблица: example");
-                Console.WriteLine("id value");
+                Console.WriteLine("Таблица: BarInfo");
+                Console.WriteLine("");
                 foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
-                    Console.WriteLine(dbDataRecord["id"] + "   " + dbDataRecord["value"]);
+                {
+                    bar = new BarInfo();
+                    //Console.WriteLine(dbDataRecord["BarName"] + "   " + dbDataRecord["Latitude"] + "   " + dbDataRecord["Longitude"] + "   " + dbDataRecord["Phone"] + "   " + dbDataRecord["WorkTime"] + "   " + dbDataRecord["Pictures"]);
+                    bar.BarName = dbDataRecord["BarName"].ToString();
+                    bar.Lat = Convert.ToDouble(dbDataRecord["Latitude"]);
+                    bar.Lng = Convert.ToDouble(dbDataRecord["Longitude"]);
+                    bar.Phone = dbDataRecord["Phone"].ToString();
+                    bar.WorkTime = dbDataRecord["WorkTime"].ToString();
+                    bar.HasMenu = Convert.ToBoolean(dbDataRecord["HasMenu"]);
+                    string[] temp = dbDataRecord["Pictures"].ToString().Split("|");
+                    foreach (var item in temp)
+                        if (item != "")
+                            bar.PictureLinks.Add(item);
+                    BarlistFromAllSites.Add(bar);
+                }
             }
             else
-                Console.WriteLine("Запрос не вернул строк");
-            */
+                Console.WriteLine("Запрос не вернул строк в BarInfo");
+            npgSqlDataReader.Close();
 
+
+            /*
+            npgSqlCommand = new NpgsqlCommand("SELECT * FROM menuitems", npgSqlConnection);
+            npgSqlDataReader = npgSqlCommand.ExecuteReader();
+            if (npgSqlDataReader.HasRows)
+            {
+                Console.WriteLine("Таблица: MenuItems");
+                Console.WriteLine("");
+                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
+                {
+                    items = new Models.ModelOfMenuItems();
+                    // Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
+                    items.Title = dbDataRecord["Title"].ToString();
+                    items.Subtitle = dbDataRecord["Subtitle"].ToString();
+                    items.Subtitle_2 = dbDataRecord["Subtitle_2"].ToString();
+                    items.Dish = dbDataRecord["Dish"].ToString();
+                    items.Price = Convert.ToInt32(dbDataRecord["Price"]);
+                    items.BarName = dbDataRecord["BarName"].ToString();
+                    MenuItems.Add(items);
+                }
+            }
+            else
+                Console.WriteLine("Запрос не вернул строк в MenuItems");
+            npgSqlDataReader.Close();
+
+
+            npgSqlCommand = new NpgsqlCommand("SELECT * FROM UserRate", npgSqlConnection);
+            npgSqlDataReader = npgSqlCommand.ExecuteReader();
+            if (npgSqlDataReader.HasRows)
+            {
+                Console.WriteLine("Таблица: UserRate");
+                Console.WriteLine("");
+                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
+                {
+                    rate = new Models.ModelOfUserRate();
+                    // Console.WriteLine(dbDataRecord["Title"] + "   " + dbDataRecord["Subtitle"] + "   " + dbDataRecord["Subtitle_2"] + "   " + dbDataRecord["Dish"] + "   " + dbDataRecord["Price"] + "   " + dbDataRecord["BarName"]);
+                    rate.BarName = dbDataRecord["BarName"].ToString();
+
+                    string[] temp = dbDataRecord["Likes"].ToString().Split(",");
+                    foreach (var item in temp)
+                    {
+                        if (item != "")
+                            rate.Likes.Add(Convert.ToInt64(item));
+                    }
+
+                    temp = dbDataRecord["Dislikes"].ToString().Split(",");
+                    foreach (var item in temp)
+                    {
+                        if (item != "")
+                            rate.Dislikes.Add(Convert.ToInt64(item));
+                    }
+
+
+                    UserRate.Add(rate);
+                }
+            }
+            else
+                Console.WriteLine("Запрос не вернул строк в MenuItems");
+
+    */
+            Console.WriteLine("чтение завершено");
+            //npgSqlDataReader.Close();
+            npgSqlConnection.Close();
+            
         }
 
-        private static void ClearBD(string name_of_table)
+        private static bool IsSame(string title1,string title2)
         {
-            
+            char[] title1_1 = title1.ToLower().ToCharArray();
+            char[] title2_2 = title2.ToLower().ToCharArray();
+            //перевод транслитом
+            for (int i = 0; i < title1_1.Length; i++)
+            {
+                if (title1_1[i] >= 97 && title1_1[i] <= 122)
+                {
+                    title1_1[i] = Transliteration(title1_1[i]);
+                }
+            }
 
-                string sqlquery = "TRUNCATE TABLE "+name_of_table;
-            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=Menu;";
-            NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
-            npgSqlConnection.Open();
+            for (int i = 0; i < title2_2.Length; i++)
+            {
+                if (title2_2[i] >= 97 && title2_2[i] <= 122)
+                {
+                    title2_2[i] = Transliteration(title2_2[i]);
+                }
+                
+            }
+            // убираем апострофы
+            string temp1 = new string(title1_1);
+            if (temp1.Contains('\''))
+                temp1 = temp1.Replace(@"'", "");
 
-            NpgsqlCommand npgSqlCommand = new NpgsqlCommand(sqlquery, npgSqlConnection);
+            string temp2 = new string(title2_2);
+            if (temp2.Contains('\''))
+                temp2=temp2.Replace(@"'", "");
+            //убираем адрес
+            string add1=null;
+            string add2=null;
+            if (temp1.Contains(" на "))
+                add1 = temp1.Split(" на ")[1];
+            if (temp2.Contains(" на "))
+                add2 = temp2.Split(" на ")[1];
 
-            npgSqlCommand.ExecuteNonQuery();
-            npgSqlConnection.Close();
+            if(add1 == null && add2 == null)
+            {
+                // обычная проверка
+            }
+            else if((add1==null && add2 != null) || (add1!=null && add2==null))
+            {
+                // у одного есть адрес => удаляем его и сравниваем названия
+                if (add1 != null)
+                {
+                    temp1 = temp1.Remove(temp1.IndexOf(" на "));
+                }
+                else if (add2 != null)
+                {
+                    temp2 = temp2.Remove(temp2.IndexOf(" на "));
 
+                }
+            }
+            else if (!add1.Equals(add2))
+            {
+                // адреса разные => разные бары
+                return false;
+            }
+            else if (add1.Equals(add2))
+            {
+                //адрес один => проверка без адреса
+                temp1 = temp1.Remove(temp1.IndexOf(" на "));
+                temp2 = temp2.Remove(temp2.IndexOf(" на "));
+
+
+            }
+            //удаляем слово не значащее слово "бар"
+            string pattern = @"\sбар$|^бар\s";
+            string pattern2 = @"\sбар\s";
+
+            if (Regex.IsMatch(temp1, pattern))
+            {
+                Regex regex = new Regex(pattern);
+                temp1 = regex.Replace(temp1, "").Trim();
+            }
+            else if (Regex.IsMatch(temp1, pattern2))
+            {
+                Regex regex = new Regex(pattern2);
+                temp1 = regex.Replace(temp1, " ");
+
+            }
+            if (Regex.IsMatch(temp2, pattern))
+            {
+                Regex regex = new Regex(pattern);
+                temp2= regex.Replace(temp2, "");
+            }
+            else if (Regex.IsMatch(temp2, pattern2))
+            {
+                Regex regex = new Regex(pattern2);
+                temp2 = regex.Replace(temp2, " ");
+
+            }
+            //удаляем ковычки
+            if (temp1.Contains("«"))
+                temp1 = temp1.Replace("«", "");
+            if (temp1.Contains("»"))
+                temp1 = temp1.Replace("»", "");
+
+            if (temp2.Contains("«"))
+                temp2 = temp2.Replace("«", "");
+            if (temp2.Contains("»"))
+                temp2 = temp2.Replace("»", "");
+
+            //удаояем точки
+            if (temp1.Contains("."))
+                temp1 = temp1.Replace(".", "");
+            if (temp2.Contains("."))
+                temp2 = temp2.Replace(".", "");
+
+            //разбиваем предлажение на слова
+            string[] WorsOfTitle1 = temp1.Split(" ");
+            string[] WorsOfTitle2 = temp2.Split(" ");
+
+            double part = 0; //чему равна доля совпадения
+            double res=0;   //результат
+
+            if (WorsOfTitle1.Length > WorsOfTitle2.Length)
+            {
+                
+                //if(WorsOfTitle2.Length>1)
+                  //  part = 100.0 / WorsOfTitle2.Length;
+                //else
+                    part = 100.0 / WorsOfTitle1.Length;
+                    
+
+                for (int i = 0; i < WorsOfTitle1.Length; i++)
+                {
+                    for (int j = 0; j < WorsOfTitle2.Length; j++)
+                    {
+                        if (WorsOfTitle1[i].Equals(WorsOfTitle2[j])) res += part;
+                    }
+                }
+            }
+            else if (WorsOfTitle2.Length > WorsOfTitle1.Length )
+            {
+                
+                //if (WorsOfTitle1.Length > 1)
+                  //  part = 100.0 / WorsOfTitle1.Length;
+                //else
+                    part = 100.0 / WorsOfTitle2.Length;
+                    
+
+                for (int i = 0; i < WorsOfTitle2.Length; i++)
+                {
+                    for (int j = 0; j < WorsOfTitle1.Length; j++)
+                    {
+                        if (WorsOfTitle2[i].Equals(WorsOfTitle1[j])) res += part;
+                    }
+                }
+            }
+            else
+            {
+                part = 100.0 / WorsOfTitle1.Length;
+                for (int i = 0; i < WorsOfTitle2.Length; i++)
+                {
+                    for (int j = 0; j < WorsOfTitle1.Length; j++)
+                    {
+                        if (WorsOfTitle2[i].Equals(WorsOfTitle1[j])) res += part;
+                    }
+                }
+                if (res == 100)
+                    return true;
+                else
+                    return false;
+            }
+            if (res > 50)
+                return true;
+            else
+                return false;
+
+        }
+        private static char Transliteration(char symbol)
+        {
+
+            switch (symbol)
+            {
+
+                case 'a': return 'а';
+                case 'b': return 'б';
+                case 'v': return 'в';
+                case 'g': return 'г';
+                case 'd': return 'д';
+                case 'e': return 'е';
+                case 'z': return 'з';
+                case 'i': return 'и';
+                case 'y': return 'й';
+                case 'k': return 'к';
+                case 'l': return 'л';
+                case 'm': return 'м';
+                case 'n': return 'н';
+                case 'o': return 'о';
+                case 'p': return 'п';
+                case 'r': return 'р';
+                case 's': return 'с';
+                case 't': return 'т';
+                case 'u': return 'у';
+                case 'f': return 'ф';
+                case 'c': return 'ц';
+                default: return '*';
+
+
+            }
         }
     }
+            
+        
+        
+    
+        
+    
 }

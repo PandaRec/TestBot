@@ -12,147 +12,164 @@ using System.Net.Http;
 using Npgsql;
 using System.Data.Common;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace ConsoleApp1
 {
-    class A {
+    class A
+    {
         static void Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var enc1251 = Encoding.GetEncoding(1251);
-
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             System.Console.InputEncoding = enc1251;
 
-            List<MenuItems> menuitems_list = new List<MenuItems>();
             List<BarInfo> barinfo_list = new List<BarInfo>();
+            string CountOfPages = "";
+            int cc = 0;
 
-            bool EndOfPages = false;
-            int CountOfPages = 1;
+            // тут начинается kuda go
 
-            while (EndOfPages==false)
+
+            //HtmlDocument kudago = new HtmlDocument();
+            //kudago.LoadHtml(getRequest("https://kudago.com/public-api/v1.4/places/?lang=&page=10&fields=&expand=&order_by=&text_format=&ids=&location=msk&has_showings=&showing_since=&showing_until&categories=bar&lon=&lat=&radius="));
+
+            HttpClient client = new HttpClient();
+
+            double PagesForKudaGo = 1;
+            for (int j = 0; j < PagesForKudaGo; j++)
             {
-                HtmlDocument doc = new HtmlDocument();
-                //doc.LoadHtml(getRequest(@"http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p=" + CountOfPages.ToString() + "&fromUrl=/bars"));
-                doc.LoadHtml(getRequest(@"http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p="+CountOfPages.ToString()+"&fromUrl=/bars"));
-                //http://gdebar.ru/bars?mainType[0]=3&withFilter=1&p=' + str(i) + '&fromUrl=/bars
-                //HtmlNodeCollection l = doc.DocumentNode.SelectNodes("//section[@class = 'catalog__list']");
-                //Console.WriteLine(doc.DocumentNode.SelectNodes("//div[@class = 'catalog__list']").Count);
-                
-                if (doc.DocumentNode.SelectNodes("//section[@class = 'catalog__list']")[0].InnerText.Contains("По данному запросу заведений не найдено :("))
+                Console.WriteLine("J = "+j+"   Pages = "+PagesForKudaGo);
+                int page = j + 1;
+                string url = "https://kudago.com/public-api/v1.4/places/?lang=&page="+page+"&fields=&expand=&order_by=&text_format=&ids=&location=msk&has_showings=&showing_since=&showing_until&categories=bar&lon=&lat=&radius=";
+                PagesForKudaGo += 1;
+                string stuff = client.GetStringAsync(url).GetAwaiter().GetResult();
+                var rootobject = JsonConvert.DeserializeObject<Rootobject>(stuff);
+                PagesForKudaGo = Math.Ceiling((double)rootobject.count / 20);
+
+
+
+
+                for (int i = 0; i < rootobject.results.Length; i++)
                 {
-                    EndOfPages = true;
-                    Console.WriteLine("stop");
-                    return;
-                }
-                else { Console.WriteLine("continue"); }
-                
-                    //Console.WriteLine(doc.Encoding.EncodingName);
-                    //Console.WriteLine(doc);
-                    HtmlNodeCollection BarCollection = doc.DocumentNode.SelectNodes("//div[@class = 'place-card__specif']/a");
+                    
+                    cc += 1;
+                    if (rootobject.results[i].is_closed == true)
+                        continue;
 
-                for (int i = 0; i < BarCollection.Count; i++)
-                    if (!BarCollection[i].InnerText.Contains("\r\n"))
-                        BarCollection.Remove(BarCollection[i]);
-
-
-                foreach (var item in BarCollection) //тестовый вывод
-                {
-                    Console.WriteLine(item.InnerText);
-                   // Console.WriteLine(item.Attributes["href"].Value);
-
-                }
-                Console.WriteLine(BarCollection.Count);
-
-
-                foreach (var item in BarCollection)
-                {
-                    HtmlDocument doc_2 = new HtmlDocument();
-                    doc_2.LoadHtml(getRequest("http://gdebar.ru" + item.Attributes["href"].Value + "/menu"));
-                    HtmlNodeCollection Menu = doc_2.DocumentNode.SelectNodes("//div[@class = 'menu__dish d-flex align-items-center justify-content-between p-2']");
-                    if (Menu == null) continue;
                     BarInfo barinfo = new BarInfo();
-                    MenuItems menuitems = new MenuItems();
+                    Console.WriteLine(rootobject.results[i].title + rootobject.results[i].id + "      " + rootobject.results[i].is_closed + "    " + rootobject.results[i].subway);
+                    barinfo.Near = rootobject.results[i].subway.Split(", ");
+                    barinfo.BarName = rootobject.results[i].title;
+                    barinfo.HasMenu = false;
+                    barinfo.Phone = rootobject.results[i].phone;
+                    url = "https://kudago.com/public-api/v1.4/places/" + rootobject.results[i].id + "/?expand=images";
+                    stuff = client.GetStringAsync(url).GetAwaiter().GetResult();
+                    var rootobject1 = JsonConvert.DeserializeObject<Rootobject1>(stuff);
 
-                    foreach (var item_2 in Menu)
+                    barinfo.Lat = rootobject1.coords.lat;
+                    barinfo.Lng = rootobject1.coords.lon;
+                    barinfo.WorkTime = rootobject1.timetable;
+
+
+                    for (int k = 0; k < rootobject1.images.Length; k++)
                     {
-
-                        HtmlNode subtitle_path_2 = item_2.ParentNode.ParentNode.ParentNode;        //сладкая вода - не обязательная subtitle_2
-                        HtmlNode subtitle_path = subtitle_path_2.ParentNode.ParentNode;       //вода
-                        HtmlNode title_path = subtitle_path.ParentNode.ParentNode; //бар
-                                                                                   //Console.WriteLine(name_path.InnerText);
-                                                                                   //Console.WriteLine(subtitle_path.InnerText);
-                        menuitems.BarName = item.InnerText;
-                        //if (title_path.Name == "parent") Console.WriteLine("1");
-                        if (title_path.GetAttributeValue("class", "") == "parent")
-                        {
-                            menuitems.Title = title_path.ChildNodes[0].InnerText;       //главная принадлежность
-                            Console.WriteLine(title_path.ChildNodes[0].InnerText);
-                        }
-                        menuitems.Subtitle = subtitle_path.ChildNodes[0].InnerText;     //вторичная принадлежность
-                        menuitems.Subtitle_2 = subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText;   // если существует, то третичная
-
-                        Console.WriteLine(subtitle_path.ChildNodes[0].InnerText);
-                        Console.WriteLine(subtitle_path_2.ChildNodes[0].ChildNodes[0].InnerText);
-
-                        HtmlNodeCollection childrens = item_2.ChildNodes;
-                        //Console.WriteLine(childrens.Count);
-                        menuitems.Dish = childrens[0].ChildNodes[0].InnerText;
-                        menuitems.Price =Convert.ToInt32(childrens[1].InnerText.Split(" ")[0]);
-
-                        Console.WriteLine("блюдо - " + childrens[0].ChildNodes[0].InnerText);
-                        Console.WriteLine("цена - " + childrens[1].InnerText);
-
-
-
-
-                        //Console.WriteLine(subtitle_path.ChildNodes[0].InnerText);
-                        //Console.WriteLine(name_path.ChildNodes[0].ChildNodes[0].InnerText);
-
-                        //Console.WriteLine(title_path.ChildNodes[0].InnerText);
-                        //Console.WriteLine(name_path.Name);
-                        //Console.WriteLine(subtitle_path.Name);
-                        //Console.WriteLine(title_path.OriginalName);
+                        barinfo.PictureLinks.Add(rootobject1.images[k].image);
                     }
-
-
-                    Console.WriteLine("-");
-                    //Console.WriteLine(item);
-                    //doc_2.LoadHtml(getRequest("http://gdebar.ru" + item.Attributes["href"].Value));
-                    HtmlNodeCollection f = doc_2.DocumentNode.SelectNodes("//div[@id = 'bar-gallery-main']/div/a");// отсюда берем ссылки на пикчи
-
-                    foreach (var item_3 in f)
-                    {
-                        barinfo.PictureLinks.Add(item_3.Attributes["href"].Value);
-                    }
-
-                    barinfo.WorkTime = doc.DocumentNode.SelectNodes("//a[@class = 'fancybox3']")[0].InnerText.Replace("\r\n", "").Split("работает ")[1].Replace("   ","");
-                    barinfo.Phone = doc.DocumentNode.SelectNodes("//a[@class = 'roistat-phone']")[0].InnerText.Replace(" ", "");
+                    barinfo_list.Add(barinfo);
+                }
+                Console.WriteLine();
+                Thread.Sleep(2000);
+            }
+            foreach (var item in barinfo_list)
+            {
+                Console.WriteLine("barname - "+item.BarName);
+                Console.WriteLine("hasmenu - "+item.HasMenu);
+                Console.WriteLine("Lat - "+item.Lat);
+                Console.WriteLine("lng - "+ item.Lng);
+                Console.WriteLine("phone - "+item.Phone);
+                Console.WriteLine("worktime - "+item.WorkTime);
+                Console.WriteLine("pic links:");
+                foreach (var item2 in item.PictureLinks)
+                {
+                    Console.WriteLine(item2);
+                }
+                Console.WriteLine();
+                Console.WriteLine("near subway:");
+                foreach (var item2 in item.Near)
+                {
+                    Console.WriteLine(item2);
                 }
 
-                Console.WriteLine(CountOfPages);
-                CountOfPages += 1;
-                Thread.Sleep(2000);
-                
             }
-            //выборка данных из тестовой бд
-            /*
-            string connectionString = "Server=localhost;Port=5432;User ID=postgres;Password=3400430;Database=TestBD;";
-            NpgsqlConnection npgSqlConnection = new NpgsqlConnection(connectionString);
-            npgSqlConnection.Open();
-            Console.WriteLine("Соединение с БД открыто");
-            NpgsqlCommand npgSqlCommand = new NpgsqlCommand("SELECT * FROM example", npgSqlConnection);
-            NpgsqlDataReader npgSqlDataReader = npgSqlCommand.ExecuteReader();
-            if (npgSqlDataReader.HasRows)
+            Console.WriteLine(cc);
+            Console.WriteLine();
+
+
+
+
+
+
+
+            // тут начинает трип эдвайзер
+            HtmlDocument doc = new HtmlDocument();
+
+
+    doc.LoadHtml(getRequest("https://www.tripadvisor.ru/Attraction_Review-g298484-d9858900-Reviews-Kot_Shrodingera-Moscow_Central_Russia.html#photos;aggregationId=&albumid=101&filter=7"));
+            HtmlNodeCollection Barss = doc.DocumentNode.SelectNodes("//div[@class = 'photoGridWrapper']");
+    string lol = doc.ParsedText;
+    Console.WriteLine();
+
+
+
+
+
+            doc.LoadHtml(getRequest(@"https://www.tripadvisor.ru/Attractions-g298484-Activities-c20-t99-Moscow_Central_Russia.html"));
+            HtmlNodeCollection BarCollection = doc.DocumentNode.SelectNodes("//div[@class = '_6sUF3jUd']/a");
+            //barcollections может быть null завернуть в try catch с переподключением
+            for (int i = 0; i<BarCollection.Count; i++)
             {
-                Console.WriteLine("Таблица: example");
-                Console.WriteLine("id value");
-                foreach (DbDataRecord dbDataRecord in npgSqlDataReader)
-                    Console.WriteLine(dbDataRecord["id"] + "   " + dbDataRecord["value"]);
+                var item = BarCollection[i];
+                if (item.Attributes["href"].Value.IndexOf("#REVIEWS") != -1) BarCollection.Remove(item);
+
             }
-            else
-                Console.WriteLine("Запрос не вернул строк");
+Console.WriteLine(BarCollection.Count);
+            foreach (var item in BarCollection)
+            {
+                Console.WriteLine(item.Attributes["href"].Value);
+            }
+
+            foreach (var item in BarCollection)
+            {
+                HtmlDocument doc_2 = new HtmlDocument();
+doc_2.LoadHtml(getRequest("https://www.tripadvisor.ru" + item.Attributes["href"].Value));
+                HtmlNode Bar = doc_2.DocumentNode.SelectNodes("//div[@class = 'attractions-contact-card-ContactCard__contactRow--3Ih6v']")[0];
+BarInfo barInfo = new BarInfo();
+string address = Bar.InnerText;
+                //HtmlNodeCollection Barss = doc_2.DocumentNode.SelectNodes("//div[@class = 'attractions-contact-card-ContactCard__linkWrapper--m0ETF']");
+                foreach (var item_2 in Barss)
+                {
+                    if (item_2.InnerText.IndexOf("Веб") == -1)
+                    {
+                        barInfo.Phone = item_2.InnerText;
+                        break;
+                    }
+
+                }
+                barInfo.BarName= doc_2.DocumentNode.SelectNodes("//h1")[1].InnerText;
+                barInfo.HasMenu = false;
+                barInfo.WorkTime = "отсутсвует";
+
+                doc_2.LoadHtml(getRequest("https://www.tripadvisor.ru" + item.Attributes["href"].Value));
+                Barss = doc_2.DocumentNode.SelectNodes("//div[@class = 'class=attractions-attraction-review-atf-AttractionReviewATFLayout__atf_component--2Qflo attractions-attraction-review- -AttractionReviewATFLayout__media_carousel_container--2HeRK']");
+
+                /*
+                List<string> poss = Yandex.Yandex.GetPos(apikey, address);
+                info.Lat = Convert.ToDouble(poss[0].Split(" ")[1].Replace(".", ","));       //широта
+                info.Lng = Convert.ToDouble(poss[0].Split(" ")[0].Replace(".", ","));       //долгота 
                 */
+            }
             Console.ReadLine();
             
             
@@ -160,38 +177,38 @@ namespace ConsoleApp1
         }
 
         public static string getRequest(string url)
+{
+
+    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+    if (response.StatusCode == HttpStatusCode.OK)
+    {
+        Stream receiveStream = response.GetResponseStream();
+        StreamReader readStream = null;
+
+        if (response.CharacterSet == null)
         {
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Stream receiveStream = response.GetResponseStream();
-                StreamReader readStream = null;
-
-                if (response.CharacterSet == null)
-                {
-                    readStream = new StreamReader(receiveStream);
-                }
-                else
-                {
-                    readStream = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
-                }
-
-                string data = readStream.ReadToEnd();
-
-                response.Close();
-                readStream.Close();
-                return data;
-            }
-            else
-            {
-                //Тут перезапуск службы с ожиданием в несколько минут
-                Console.WriteLine("error");
-                return "eror";
-            }
+            readStream = new StreamReader(receiveStream);
         }
+        else
+        {
+            readStream = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
+        }
+
+        string data = readStream.ReadToEnd();
+
+        response.Close();
+        readStream.Close();
+        return data;
+    }
+    else
+    {
+        //Тут перезапуск службы с ожиданием в несколько минут
+        Console.WriteLine("error");
+        return "eror";
+    }
+}
 
 
     }

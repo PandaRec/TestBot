@@ -13,4 +13,8 @@
     <PackageReference Include="YandexGeocoder" Version="0.4.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Metro\" />
+  </ItemGroup>
+
 </Project>

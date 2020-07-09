@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ParseSites.Site1
+namespace ParseSites
 {
     class BarInfo
     {
@@ -12,6 +12,7 @@ namespace ParseSites.Site1
         public string Phone { get; set; }
         public string WorkTime { get; set; }
         public bool HasMenu { get; set; }
+        public string[] NearSubway { get; set; }
         public List<string> PictureLinks { get; set; } = new List<string>();
     }
 }
