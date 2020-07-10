@@ -24,8 +24,18 @@ namespace ParseSites
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             System.Console.InputEncoding = enc1251;
 
-            Console.WriteLine(IsSame("музыкальный бар «Мумий Тролль»", "бар Tiki-bar"));
+
+            //if("кафе-бар «Дружба 2.0»".Contains(@"&nbsp;"))
+              //  Console.WriteLine();
+            //string a = "кафе-бар «Дружба 2.0»";
+
+            //string noHTML = Regex.Replace(a, @"<[^>]+>|&nbsp;", "");
+
+            //char[] kk = a.ToCharArray();
+            Console.WriteLine(IsSame("Дружба 2.0 на Шаболовке", "кафе-бар «Дружба 2.0»"));
             Console.WriteLine();
+            
+
 
 
 
@@ -95,36 +105,6 @@ namespace ParseSites
             Console.WriteLine("**************************");
             PP();
             Console.WriteLine();
-            foreach (var item in BarlistFromSite1)
-            {
-                if(item.BarName.Contains("мумий тролль"))
-                    Console.WriteLine(item.BarName);
-            }
-            Console.WriteLine();
-            foreach (var item in BarlistFromSite2)
-            {
-                if (item.BarName.Contains("Мумий Тролль"))
-                    Console.WriteLine(item.BarName);
-            }
-          Console.WriteLine(  );
-            foreach (var item in BarlistFromSite1)
-            {
-                if (item.BarName.Contains("Мумий Тролль"))
-                    Console.WriteLine(item.BarName);
-            }
-            foreach (var item in BarlistFromSite2)
-            {
-                if (item.BarName.Contains("Мумий Тролль"))
-                    Console.WriteLine(item.BarName);
-            }
-            Console.WriteLine();
-            for (int i = 0; i < BarlistFromSite2.Count; i++)
-            {
-                if (BarlistFromSite2[i].BarName.Contains("Мумий Тролль"))
-                    Console.WriteLine(i);
-            }
-            Console.WriteLine();
-
 
         }
 
@@ -363,6 +343,7 @@ namespace ParseSites
         {
             char[] title1_1 = title1.ToLower().ToCharArray();
             char[] title2_2 = title2.ToLower().ToCharArray();
+
             //перевод транслитом
             for (int i = 0; i < title1_1.Length; i++)
             {
@@ -370,6 +351,7 @@ namespace ParseSites
                 {
                     title1_1[i] = Transliteration(title1_1[i]);
                 }
+                if (title1_1[i] == 160) title1_1[i] = ' ';
             }
 
             for (int i = 0; i < title2_2.Length; i++)
@@ -378,157 +360,59 @@ namespace ParseSites
                 {
                     title2_2[i] = Transliteration(title2_2[i]);
                 }
-                
-            }
-            // убираем апострофы
-            string temp1 = new string(title1_1);
-            if (temp1.Contains('\''))
-                temp1 = temp1.Replace(@"'", "");
+                if (title2_2[i] == 160) title2_2[i] = ' ';
 
-            string temp2 = new string(title2_2);
-            if (temp2.Contains('\''))
-                temp2=temp2.Replace(@"'", "");
-            //убираем адрес
-            string add1=null;
-            string add2=null;
-            if (temp1.Contains(" на "))
-                add1 = temp1.Split(" на ")[1];
-            if (temp2.Contains(" на "))
-                add2 = temp2.Split(" на ")[1];
 
-            if(add1 == null && add2 == null)
-            {
-                // обычная проверка
             }
-            else if((add1==null && add2 != null) || (add1!=null && add2==null))
-            {
-                // у одного есть адрес => удаляем его и сравниваем названия
-                if (add1 != null)
-                {
-                    temp1 = temp1.Remove(temp1.IndexOf(" на "));
-                }
-                else if (add2 != null)
-                {
-                    temp2 = temp2.Remove(temp2.IndexOf(" на "));
-
-                }
-            }
-            else if (!add1.Equals(add2))
-            {
-                // адреса разные => разные бары
+            
+            (string,string) middlewords = Comparison.DeleteExtraSymbols(new string(title1_1), new string(title2_2));
+            middlewords = Comparison.DeleteAddresses(middlewords.Item1, middlewords.Item2);
+            if (middlewords.Item1 == "" && middlewords.Item2 == "") // если адреса разные
                 return false;
-            }
-            else if (add1.Equals(add2))
+            (string,string) middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2);
+            //middlewords = DeleteExtraWords(middlewords.Item1, middlewords.Item2);
+
+            if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false)
             {
-                //адрес один => проверка без адреса
-                temp1 = temp1.Remove(temp1.IndexOf(" на "));
-                temp2 = temp2.Remove(temp2.IndexOf(" на "));
+                middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2,false);
 
-
-            }
-            //удаляем слово не значащее слово "бар"
-            string pattern = @"\sбар$|^бар\s";
-            string pattern2 = @"\sбар\s";
-
-            if (Regex.IsMatch(temp1, pattern))
-            {
-                Regex regex = new Regex(pattern);
-                temp1 = regex.Replace(temp1, "").Trim();
-            }
-            else if (Regex.IsMatch(temp1, pattern2))
-            {
-                Regex regex = new Regex(pattern2);
-                temp1 = regex.Replace(temp1, " ");
-
-            }
-            if (Regex.IsMatch(temp2, pattern))
-            {
-                Regex regex = new Regex(pattern);
-                temp2= regex.Replace(temp2, "");
-            }
-            else if (Regex.IsMatch(temp2, pattern2))
-            {
-                Regex regex = new Regex(pattern2);
-                temp2 = regex.Replace(temp2, " ");
-
-            }
-            //удаляем ковычки
-            if (temp1.Contains("«"))
-                temp1 = temp1.Replace("«", "");
-            if (temp1.Contains("»"))
-                temp1 = temp1.Replace("»", "");
-
-            if (temp2.Contains("«"))
-                temp2 = temp2.Replace("«", "");
-            if (temp2.Contains("»"))
-                temp2 = temp2.Replace("»", "");
-
-            //удаояем точки
-            if (temp1.Contains("."))
-                temp1 = temp1.Replace(".", "");
-            if (temp2.Contains("."))
-                temp2 = temp2.Replace(".", "");
-
-            //разбиваем предлажение на слова
-            string[] WorsOfTitle1 = temp1.Split(" ");
-            string[] WorsOfTitle2 = temp2.Split(" ");
-
-            double part = 0; //чему равна доля совпадения
-            double res=0;   //результат
-
-            if (WorsOfTitle1.Length > WorsOfTitle2.Length)
-            {
-                
-                //if(WorsOfTitle2.Length>1)
-                  //  part = 100.0 / WorsOfTitle2.Length;
-                //else
-                    part = 100.0 / WorsOfTitle1.Length;
-                    
-
-                for (int i = 0; i < WorsOfTitle1.Length; i++)
+                if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false)
                 {
-                    for (int j = 0; j < WorsOfTitle2.Length; j++)
+                    middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2);
+
+                    if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false)
                     {
-                        if (WorsOfTitle1[i].Equals(WorsOfTitle2[j])) res += part;
+                        middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2, false);
+
+                        if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false)
+                        {
+                            //тут будет перевод
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+
+                    }
+                    else
+                    {
+                        return true;
                     }
                 }
-            }
-            else if (WorsOfTitle2.Length > WorsOfTitle1.Length )
-            {
-                
-                //if (WorsOfTitle1.Length > 1)
-                  //  part = 100.0 / WorsOfTitle1.Length;
-                //else
-                    part = 100.0 / WorsOfTitle2.Length;
-                    
-
-                for (int i = 0; i < WorsOfTitle2.Length; i++)
-                {
-                    for (int j = 0; j < WorsOfTitle1.Length; j++)
-                    {
-                        if (WorsOfTitle2[i].Equals(WorsOfTitle1[j])) res += part;
-                    }
-                }
-            }
-            else
-            {
-                part = 100.0 / WorsOfTitle1.Length;
-                for (int i = 0; i < WorsOfTitle2.Length; i++)
-                {
-                    for (int j = 0; j < WorsOfTitle1.Length; j++)
-                    {
-                        if (WorsOfTitle2[i].Equals(WorsOfTitle1[j])) res += part;
-                    }
-                }
-                if (res == 100)
-                    return true;
                 else
-                    return false;
+                {
+                    return true;
+                }
+                
+                
             }
-            if (res > 50)
-                return true;
             else
-                return false;
+                return true;
+
+            
+            
+            
 
         }
         private static char Transliteration(char symbol)
@@ -563,11 +447,7 @@ namespace ParseSites
 
             }
         }
-    }
             
-        
-        
-    
-        
-    
+    }
+             
 }
