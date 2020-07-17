@@ -26,14 +26,19 @@ namespace ParseSites
 
 
             //if("кафе-бар «Дружба 2.0»".Contains(@"&nbsp;"))
-              //  Console.WriteLine();
+            //  Console.WriteLine();
             //string a = "кафе-бар «Дружба 2.0»";
 
             //string noHTML = Regex.Replace(a, @"<[^>]+>|&nbsp;", "");
 
             //char[] kk = a.ToCharArray();
-            Console.WriteLine(IsSame("Дружба 2.0 на Шаболовке", "кафе-бар «Дружба 2.0»"));
+            //Браун Бар на Волгоградском Проспекте  -  ресторан-бар BROWNBAR
+            Console.WriteLine(IsSame("Честерфилд на Арбате", "бар Chesterfield"));
             Console.WriteLine();
+
+            Yandex.Yandex.Translate("красный",Yandex.Yandex.TargetLanguage.ru);
+            Console.WriteLine();
+            
             
 
 
@@ -100,6 +105,20 @@ namespace ParseSites
             Site2.Execute.Do(out BarlistFromSite2);
             Console.WriteLine(BarlistFromSite1.Count);
             Console.WriteLine(BarlistFromSite2.Count);
+            /*
+            StreamWriter f = new StreamWriter("test.txt",true);
+            foreach (var item in BarlistFromSite1)
+            {
+                f.WriteLine(item.BarName);
+            }
+            f.WriteLine("************************");
+            foreach (var item in BarlistFromSite2)
+            {
+                f.WriteLine(item.BarName);
+            }
+            f.Close();
+            */
+
             ProcessingOfData();
             Console.ReadLine();
             Console.WriteLine("**************************");
@@ -150,7 +169,7 @@ namespace ParseSites
             {
                 for (int j = 0; j < BarlistFromSite2.Count; j++)
                 {
-                    if (BarlistFromSite1[i].Lat == BarlistFromSite2[j].Lat && BarlistFromSite1[i].Lng == BarlistFromSite2[j].Lng)
+                    if (IsSame(BarlistFromSite1[i].BarName, BarlistFromSite2[j].BarName))
                         Console.WriteLine(BarlistFromSite1[i].BarName + "  -  " + BarlistFromSite2[j].BarName);
                 }
             }
@@ -341,6 +360,11 @@ namespace ParseSites
 
         private static bool IsSame(string title1,string title2)
         {
+
+            return Comparison.Compare(title1, title2,Comparison.CompareBy.Translation);
+
+            /*
+            bool result = false;
             char[] title1_1 = title1.ToLower().ToCharArray();
             char[] title2_2 = title2.ToLower().ToCharArray();
 
@@ -369,51 +393,130 @@ namespace ParseSites
             middlewords = Comparison.DeleteAddresses(middlewords.Item1, middlewords.Item2);
             if (middlewords.Item1 == "" && middlewords.Item2 == "") // если адреса разные
                 return false;
-            (string,string) middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2);
+            (string,string) middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2); //удаляется любое вхождение
             //middlewords = DeleteExtraWords(middlewords.Item1, middlewords.Item2);
 
-            if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false)
+            if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false) //строго по словам
             {
-                middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2,false);
+                middlewordsExtra= Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2,false); //удаляется только при вхождение в оба
 
-                if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false)
+                if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false) //строго по словам
                 {
-                    middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2);
+                    middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2); //удаляется любое вхождение
 
-                    if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false)
+                    if(Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false) //с вариацией
                     {
-                        middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2, false);
+                        middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2, false); //удаляется только при вхождение в оба
 
-                        if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false)
+                        if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false) // с вариацией
                         {
-                            //тут будет перевод
-                            return false;
+                            //return false;
+                            result = false;
                         }
                         else
                         {
-                            return true;
+                            result = true;
+                            //return true;
                         }
 
                     }
                     else
                     {
-                        return true;
+                        result = true;
+
+                        //return true;
                     }
                 }
                 else
                 {
-                    return true;
+                    result = true;
+
+                    //return true;
                 }
-                
-                
+
+
             }
             else
+                result = true;
+            //return true;
+
+
+            if (result == true)
                 return true;
+            else
+                return false;
+            */
+            /*
+            //сравнение с переводом
+            //переводим первое название и сравниваем со вторым
+            // переводим второе название и сравниваем с первым
 
-            
-            
+            title1_1 = title1.ToLower().ToCharArray();
+            title2_2 = title2.ToLower().ToCharArray();
+
+            //перевод транслитом
+            for (int i = 0; i < title1_1.Length; i++)
+                if (title1_1[i] == 160) title1_1[i] = ' ';
             
 
+            for (int i = 0; i < title2_2.Length; i++)
+                if (title2_2[i] == 160) title2_2[i] = ' ';
+
+
+            middlewords = Comparison.DeleteExtraSymbols(new string(title1_1), new string(title2_2));
+            middlewords = Comparison.DeleteAddresses(middlewords.Item1, middlewords.Item2);
+            if (middlewords.Item1 == "" && middlewords.Item2 == "") // если адреса разные
+                return false;
+            List<string> ResOfTranslate = new List<string>();
+            middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2); //удаляется любое вхождение
+
+            if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false) //строго по словам
+            {
+                middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2, false); //удаляется только при вхождение в оба
+
+                if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2) == false) //строго по словам
+                {
+                    middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2); //удаляется любое вхождение
+
+                    if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false) //с вариацией
+                    {
+                        middlewordsExtra = Comparison.DeleteExtraWords(middlewords.Item1, middlewords.Item2, false); //удаляется только при вхождение в оба
+
+                        if (Comparison.Compare(middlewordsExtra.Item1, middlewordsExtra.Item2, true) == false) // с вариацией
+                        {
+                            //return false;
+                            result = false;
+                        }
+                        else
+                        {
+                            result = true;
+                            //return true;
+                        }
+
+                    }
+                    else
+                    {
+                        result = true;
+
+                        //return true;
+                    }
+                }
+                else
+                {
+                    result = true;
+
+                    //return true;
+                }
+
+
+            }
+            else
+                result = true;
+            //return true;
+
+            return false;
+
+    */
         }
         private static char Transliteration(char symbol)
         {
